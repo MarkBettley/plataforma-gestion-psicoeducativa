@@ -2,6 +2,10 @@
 
 Aplicación web demostrativa para organizar, supervisar y analizar actividades de acompañamiento psicoeducativo en instituciones educativas.
 
+## Vista previa
+
+![Dashboard de la Plataforma de Gestión Psicoeducativa](docs/images/dashboard.png)
+
 ## Funcionalidades
 
 - Dashboard con indicadores de seguimiento.
