@@ -1,0 +1,18 @@
+// ===========================================
+// App Icons
+// ===========================================
+
+.app-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 22.37%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}

@@ -1,0 +1,17 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo redondeado estilo macOS (Squircle) -->
+  <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+  
+  <!-- Cuerpo de la libreta (Lomo lateral) -->
+  <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+  
+  <!-- Icono del usuario (Silueta) -->
+  <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+  <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+  
+  <!-- Pestañas laterales de la agenda -->
+  <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+  <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+  <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+  <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+</svg>

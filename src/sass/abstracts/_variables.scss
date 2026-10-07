@@ -1,0 +1,77 @@
+// ===========================================
+// Variables - Plataforma Psicoeducativa
+// ===========================================
+
+// Colores Sistema Apple
+$apple-blue: #007AFF;
+$apple-green: #34C759;
+$apple-red: #FF3B30;
+$apple-orange: #FF9500;
+$apple-yellow: #FFCC00;
+$apple-purple: #AF52DE;
+$apple-pink: #FF2D55;
+$apple-teal: #5AC8FA;
+$apple-indigo: #5856D6;
+
+// Grises del Sistema
+$gray-1: #8E8E93;
+$gray-2: #AEAEB2;
+$gray-3: #C7C7CC;
+$gray-4: #D1D1D6;
+$gray-5: #E5E5EA;
+$gray-6: #F2F2F7;
+
+// Fondos
+$bg-primary: #FFFFFF;
+$bg-secondary: #F2F2F7;
+$bg-tertiary: #FFFFFF;
+$bg-dark: #000000;
+$bg-dark-secondary: #1C1C1E;
+$bg-dark-tertiary: #2C2C2E;
+
+// Efectos Spéciales
+$glass-light: rgba(255, 255, 255, 0.72);
+$glass-dark: rgba(28, 28, 30, 0.72);
+$dock-bg: rgba(255, 255, 255, 0.25);
+$dock-border: rgba(255, 255, 255, 0.3);
+
+// Sombras
+$shadow-small: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-large: 0 8px 24px rgba(0, 0, 0, 0.12);
+$shadow-dock: 0 0 40px rgba(0, 0, 0, 0.2);
+
+// Bordes Redondeados
+$radius-small: 8px;
+$radius-medium: 12px;
+$radius-large: 16px;
+$radius-xl: 22px;
+$radius-card: 20px;
+$radius-app-icon: 22.37%;
+$radius-full: 9999px;
+
+// Tipografía San Francisco
+$font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+
+// Jerarquía Tipográfica
+$font-large-title: 34px;
+$font-title-1: 28px;
+$font-title-2: 22px;
+$font-title-3: 20px;
+$font-headline: 17px;
+$font-body: 17px;
+$font-callout: 16px;
+$font-subhead: 15px;
+$font-footnote: 13px;
+$font-caption-1: 12px;
+$font-caption-2: 11px;
+
+// Menu Bar
+$menu-bar-height: 28px;
+
+// Dock
+$dock-icon-size: 48px;
+$dock-spacing: 8px;
+
+// Widgets
+$widgets-width: 320px;

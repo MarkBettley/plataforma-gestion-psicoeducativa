@@ -1,0 +1,56 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- Fondo redondeado estilo macOS/iOS (Squircle) con sombra suave -->
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dx="0" dy="5" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.15"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Base Blanca con Sombra -->
+  <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow)"/>
+  
+  <!-- Parte Superior Roja (Header) -->
+  <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+
+  <!-- Texto: Día de la Semana (Ej. MIE) - Dinámico -->
+  <text id="day-name" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">
+    DIA
+  </text>
+  
+  <!-- Texto: Número del Mes (Ej. 18) - Dinámico -->
+  <text id="day-number" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">
+    00
+  </text>
+
+  <!-- Script para actualizar la fecha automáticamente -->
+  <script type="text/javascript">
+    <![CDATA[
+      function updateCalendarIcon() {
+        const now = new Date();
+        
+        // Configuración para el nombre del día (abreviado, 3 letras, mayúsculas)
+        const dayNameOptions = { weekday: 'short' };
+        let dayName = now.toLocaleDateString('es-ES', dayNameOptions).toUpperCase();
+        // Eliminar el punto si la abreviatura lo incluye (ej. "mié." -> "MIÉ")
+        dayName = dayName.replace('.', ''); 
+        
+        // Número del día
+        const dayNumber = now.getDate();
+
+        // Actualizar el DOM del SVG
+        document.getElementById('day-name').textContent = dayName;
+        document.getElementById('day-number').textContent = dayNumber;
+      }
+
+      // Ejecutar al cargar
+      updateCalendarIcon();
+    ]]>
+  </script>
+</svg>

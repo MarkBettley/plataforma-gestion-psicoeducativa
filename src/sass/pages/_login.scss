@@ -1,0 +1,145 @@
+// ===========================================
+// Login - Pantalla de Bloqueo macOS
+// ===========================================
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'base/animations';
+
+.login {
+  position: fixed;
+  inset: 0;
+  @include center-flex;
+  flex-direction: column;
+  
+  // Wallpaper con blur
+  background: 
+    url('../assets/wallpapers/default.jpg') center/cover no-repeat,
+    $bg-dark;
+  background-blend-mode: overlay;
+
+  // Overlay para legibilidad
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(30px);
+    z-index: 0;
+  }
+
+  &__container {
+    position: relative;
+    z-index: 1;
+    @include center-flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  // Avatar
+  &__avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: $gray-3;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: $shadow-medium;
+    overflow: hidden;
+    @include transition-smooth;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__username {
+    color: white;
+    font-size: $font-title-2;
+    font-weight: $font-semibold;
+  }
+
+  &__role {
+    color: rgba(white, 0.7);
+    font-size: $font-subhead;
+  }
+
+  // Campo contraseña estilo pill
+  &__password-container {
+    position: relative;
+    margin-top: 8px;
+  }
+
+  &__password {
+    width: 280px;
+    padding: 14px 20px;
+    border-radius: $radius-xl;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    font-size: $font-body;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    @include transition-smooth;
+
+    &::placeholder {
+      color: rgba(white, 0.5);
+    }
+
+    &:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  // Error animation
+  &__error {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  //Forgot password link
+  &__forgot {
+    color: rgba(white, 0.6);
+    font-size: $font-footnote;
+    cursor: pointer;
+    @include transition-smooth;
+
+    &:hover {
+      color: white;
+      text-decoration: underline;
+    }
+  }
+
+  // Submit button
+  &__submit {
+    margin-top: 16px;
+    width: 280px;
+    padding: 14px;
+    border-radius: $radius-xl;
+    background: $apple-blue;
+    color: white;
+    font-size: $font-body;
+    font-weight: $font-medium;
+    cursor: pointer;
+    @include transition-smooth;
+
+    &:hover {
+      background: darken($apple-blue, 5%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  // Success transition
+  &--success {
+    animation: login-success 0.5s ease-out forwards;
+  }
+}

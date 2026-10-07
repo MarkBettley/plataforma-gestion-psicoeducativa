@@ -1,0 +1,150 @@
+// ===========================================
+// Dashboard - macOS Desktop
+// ===========================================
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'components/menu-bar';
+@import 'components/dock';
+
+.dashboard {
+  position: fixed;
+  inset: 0;
+  
+  // Wallpaper visible
+  background: url('../assets/wallpapers/default.jpg') center/cover no-repeat;
+
+  // Menu bar offset
+  &__content {
+    padding-top: $menu-bar-height;
+    padding-bottom: 80px; // Space for dock
+    height: 100%;
+    display: flex;
+  }
+
+  // Floating apps area (left side)
+  &__apps {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-content: flex-start;
+  }
+
+  // Widgets panel (right side)
+  &__widgets {
+    width: $widgets-width;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+}
+
+// Widget card
+.widget {
+  @include glass-effect;
+  border-radius: $radius-card;
+  padding: 16px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-size: $font-headline;
+    font-weight: $font-semibold;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    color: $gray-1;
+  }
+
+  // Specific widgets
+  &--clock {
+    text-align: center;
+
+    .widget__time {
+      font-size: $font-large-title;
+      font-weight: $font-light;
+    }
+
+    .widget__date {
+      font-size: $font-subhead;
+      color: $gray-1;
+    }
+  }
+
+  &--stats {
+    .widget__grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .widget__stat {
+      text-align: center;
+    }
+
+    .widget__value {
+      font-size: $font-title-2;
+      font-weight: $font-bold;
+    }
+
+    .widget__label {
+      font-size: $font-footnote;
+      color: $gray-1;
+    }
+  }
+}
+
+// Floating app window
+.app-window {
+  @include glass-effect;
+  border-radius: $radius-large;
+  min-width: 300px;
+  min-height: 200px;
+  overflow: hidden;
+  box-shadow: $shadow-large;
+
+  &__header {
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 8px;
+
+    &-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+
+      &--close { background: #FF5F56; }
+      &--minimize { background: #FFBD2E; }
+      &--maximize { background: #27C93F; }
+    }
+  }
+
+  &__title {
+    flex: 1;
+    text-align: center;
+    font-size: $font-footnote;
+    color: $gray-1;
+  }
+
+  &__content {
+    padding: 16px;
+  }
+}

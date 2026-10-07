@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Psicologos - Plataforma Psicoeducativa</title>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <script src="/src/js/data/sync-store.js"></script>
+  <style>
+    .page { display: flex; height: 100vh; padding-top: 28px; background: #F2F2F7; }
+    
+    /* Sidebar */
+    .sidebar { 
+      width: 280px; 
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid #E5E5EA; 
+      overflow-y: auto; 
+      display: flex;
+      flex-direction: column;
+    }
+    .search { padding: 12px; }
+    .search input { 
+      width: 100%; 
+      padding: 10px 14px; 
+      border-radius: 9999px; 
+      background: #E5E5EA; 
+      border: none; 
+      font-size: 15px;
+      outline: none;
+    }
+    .search input:focus { background: #D1D1D6; }
+    .filters { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 8px; 
+      padding: 0 12px 12px; 
+      border-bottom: 1px solid #E5E5EA;
+    }
+    .filter { 
+      padding: 6px 12px; 
+      border-radius: 9999px; 
+      font-size: 12px; 
+      background: #E5E5EA; 
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter:hover { background: #D1D1D6; }
+    .filter--active { background: #007AFF; color: white; }
+    
+    /* Team section */
+    .team-section {
+      padding: 12px;
+      border-bottom: 1px solid #E5E5EA;
+    }
+    .team-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8E8E93;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .team-list { display: flex; flex-direction: column; gap: 2px; }
+    .team-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .team-item:hover { background: rgba(0,0,0,0.05); }
+    .team-item--active { background: rgba(0,122,255,0.1); color: #007AFF; }
+    .team-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: #8E8E93;
+      background: #E5E5EA;
+      padding: 2px 6px;
+      border-radius: 9999px;
+    }
+    
+    /* List */
+    .list { flex: 1; overflow-y: auto; }
+    .section { font-size: 12px; font-weight: 600; color: #8E8E93; padding: 12px 12px 8px; text-transform: uppercase; }
+    .item { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 12px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+    }
+    .item:hover { background: rgba(0,0,0,0.05); }
+    .item--active { background: rgba(0,122,255,0.1); }
+    .avatar { 
+      width: 44px; 
+      height: 44px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg,#007AFF,#5856D6); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: white; 
+      font-weight: 600; 
+      font-size: 14px; 
+      position: relative; 
+    }
+    .status { 
+      position: absolute; 
+      bottom: 0; 
+      right: 0; 
+      width: 10px; 
+      height: 10px; 
+      border-radius: 50%; 
+      border: 2px solid white; 
+    }
+    .status--online { background: #34C759; }
+    .status--away { background: #FFCC00; }
+    .status--offline { background: #8E8E93; }
+    .info { flex: 1; }
+    .name { font-weight: 500; font-size: 14px; }
+    .specialty { font-size: 12px; color: #8E8E93; }
+    
+    /* Main content */
+    .main { 
+      flex: 1; 
+      padding: 24px; 
+      overflow-y: auto; 
+      background: white; 
+    }
+    .header { display: flex; gap: 20px; margin-bottom: 24px; align-items: center; }
+    .avatar-lg { 
+      width: 100px; 
+      height: 100px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg,#007AFF,#5856D6); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: white; 
+      font-weight: 700; 
+      font-size: 32px; 
+    }
+    .header-info { flex: 1; }
+    .title { font-size: 28px; font-weight: 700; }
+    .subtitle { font-size: 15px; color: #8E8E93; margin-top: 4px; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    .status-badge--online { background: rgba(52,199,89,0.1); color: #34C759; }
+    .status-badge--away { background: rgba(255,204,0,0.1); color: #FFCC00; }
+    .status-badge--offline { background: rgba(142,142,147,0.1); color: #8E8E93; }
+    
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+    .stat { background: #F2F2F7; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #007AFF; }
+    .stat-label { font-size: 12px; color: #8E8E93; margin-top: 4px; }
+    
+    /* Cards */
+    .card { background: #F2F2F7; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-title { font-size: 13px; font-weight: 600; color: #8E8E93; margin-bottom: 12px; text-transform: uppercase; }
+    .card-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E5E5EA; }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: #8E8E93; font-size: 14px; }
+    .card-value { font-weight: 500; font-size: 14px; }
+    
+    /* Gamification */
+    .gamification { display: flex; gap: 12px; margin-top: 16px; }
+    .gamification__item {
+      flex: 1;
+      background: linear-gradient(135deg,#5856D6,#AF52DE);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      color: white;
+    }
+    .gamification__value { font-size: 18px; font-weight: 700; }
+    .gamification__label { font-size: 11px; opacity: 0.8; }
+    
+    /* Actions */
+    .actions { display: flex; gap: 12px; margin-top: 24px; }
+    .btn { padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn:hover { transform: scale(1.02); opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn--primary { background: #007AFF; color: white; }
+    .btn--secondary { background: #E5E5EA; color: #000; }
+    
+    /* AI Indicators */
+    .ai-indicators { display: flex; gap: 12px; margin-top: 12px; }
+    .ai-indicator {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .ai-indicator--cumplimiento { background: rgba(52,199,89,0.1); }
+    .ai-indicator--riesgo-bajo { background: rgba(52,199,89,0.1); border: 1px solid #34C759; }
+    .ai-indicator--riesgo-medio { background: rgba(255,204,0,0.1); border: 1px solid #FFCC00; }
+    .ai-indicator--riesgo-alto { background: rgba(255,59,48,0.1); border: 1px solid #FF3B30; }
+    .ai-indicator__value { font-size: 20px; font-weight: 700; }
+    .ai-indicator--cumplimiento .ai-indicator__value { color: #34C759; }
+    .ai-indicator--riesgo-bajo .ai-indicator__value { color: #34C759; }
+    .ai-indicator--riesgo-medio .ai-indicator__value { color: #FFCC00; }
+    .ai-indicator--riesgo-alto .ai-indicator__value { color: #FF3B30; }
+    .ai-indicator__label { font-size: 11px; color: #8E8E93; margin-top: 4px; }
+    
+    /* Recommendations */
+    .recommendations { margin-top: 12px; }
+    .recommendation {
+      padding: 8px 12px;
+      background: #FFF9E6;
+      border-left: 3px solid #FFCC00;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    
+    /* Achievements */
+    .achievements { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    .achievement {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #F2F2F7;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .achievement__icon { font-size: 20px; }
+    .achievement__info { display: flex; flex-direction: column; }
+    .achievement__name { font-weight: 500; font-size: 12px; }
+    .achievement__date { font-size: 11px; color: #8E8E93; }
+    
+    /* Menu bar extra */
+    .menu-bar__dropdown { position: relative; }
+    .menu-bar__menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      min-width: 180px;
+      padding: 4px 0;
+      display: none;
+      z-index: 1000;
+    }
+    .menu-bar__menu--open { display: block; }
+    .menu-bar__menu-item { 
+      padding: 8px 16px; 
+      cursor: pointer; 
+      font-size: 13px; 
+    }
+    .menu-bar__menu-item:hover { background: rgba(0,0,0,0.05); }
+    .menu-bar__menu-separator { height: 1px; background: #E5E5EA; margin: 4px 0; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay--open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+    .modal-overlay--open .modal { transform: scale(1); }
+    .modal-header {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .modal-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#007AFF,#5856D6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 28px;
+    }
+    .modal-header-info { flex: 1; }
+    .modal-title { font-size: 24px; font-weight: 700; }
+    .modal-subtitle { font-size: 14px; color: #8E8E93; margin-top: 4px; }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #E5E5EA;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-section { margin-bottom: 20px; }
+    .modal-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8E8E93;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .modal-field {
+      padding: 8px 12px;
+      background: #F2F2F7;
+      border-radius: 8px;
+    }
+    .modal-field__label { font-size: 11px; color: #8E8E93; }
+    .modal-field__value { font-size: 14px; font-weight: 500; margin-top: 2px; }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div style="position:fixed;inset:0;background:#F2F2F7;z-index:-1;"></div>
+
+  <!-- Menu Bar -->
+  <header class="menu-bar">
+    <div class="menu-bar__left">
+      <span class="menu-bar__logo" style="cursor:pointer;" onclick="navigateTo('/src/html/dashboard.html')" title="SEP">SEP</span>
+      
+      <!-- Archivo dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-archivo" style="cursor:pointer;">Archivo</a>
+        <div class="menu-bar__menu" id="dropdown-archivo">
+          <div class="menu-bar__menu-item" onclick="openModal('modal-nuevo-psi');closeMenus()">Nuevo Psicologo</div>
+          <div class="menu-bar__menu-item" onclick="openModal('modal-exportar');closeMenus()">Exportar Lista</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="imprimirLista();closeMenus()">Imprimir</div>
+        </div>
+      </div>
+      
+      <!-- Editar dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-editar" style="cursor:pointer;">Editar</a>
+        <div class="menu-bar__menu" id="dropdown-editar">
+          <div class="menu-bar__menu-item" onclick="document.execCommand('undo');closeMenus()">Deshacer</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('redo');closeMenus()">Rehacer</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('cut');closeMenus()">Cortar</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('copy');closeMenus()">Copiar</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('paste');closeMenus()">Pegar</div>
+        </div>
+      </div>
+      
+      <!-- Ver dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-ver" style="cursor:pointer;">Ver</a>
+        <div class="menu-bar__menu" id="dropdown-ver">
+          <div class="menu-bar__menu-item" onclick="zoomIn();closeMenus()">Zoom +</div>
+          <div class="menu-bar__menu-item" onclick="zoomOut();closeMenus()">Zoom -</div>
+          <div class="menu-bar__menu-item" onclick="zoomReset();closeMenus()">Tamano Original</div>
+        </div>
+      </div>
+      
+      <!-- Ayuda dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-ayuda" style="cursor:pointer;">Ayuda</a>
+        <div class="menu-bar__menu" id="dropdown-ayuda">
+          <div class="menu-bar__menu-item" onclick="document.getElementById('search-input').focus();closeMenus()">Buscar Psicologos</div>
+          <div class="menu-bar__menu-item" onclick="alert('Manual de Usuario - En desarrollo');closeMenus()">Manual de Usuario</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar__right">
+      <button class="menu-bar__right-icon" id="logout-btn" title="Cerrar sesion">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      </button>
+      <div class="menu-bar__right-avatar" id="user-avatar">MG</div>
+      <div class="menu-bar__time" id="clock">10:30</div>
+    </div>
+  </header>
+
+  <main class="page" style="padding-bottom: 80px;">
+    <aside class="sidebar">
+      <!-- Search -->
+      <div class="search">
+        <input type="text" placeholder="Buscar psicologos..." id="search-input">
+      </div>
+      
+      <!-- Status filters -->
+      <div class="filters">
+        <span class="filter filter--active" data-filter="todos">Todos</span>
+        <span class="filter" data-filter="online">En linea</span>
+        <span class="filter" data-filter="away">Ausente</span>
+        <span class="filter" data-filter="offline">Desconectado</span>
+      </div>
+      
+      <!-- Teams/Regions -->
+      <div class="team-section">
+        <div class="team-title">Equipos</div>
+        <div class="team-list" id="team-list">
+          <!-- Dynamic teams -->
+        </div>
+      </div>
+      
+      <!-- Psychologist list -->
+      <div class="list" id="psi-list">
+      </div>
+    </aside>
+    
+    <!-- Detail panel -->
+    <section class="main" id="psi-detail">
+    </section>
+  </main>
+
+  <!-- Modal for profile -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal" style="position:relative;">
+      <button class="modal-close" onclick="closeProfileModal()">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Dock -->
+  <nav class="dock">
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../administrativos/index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="folderGradient2" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient2)"/>
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="homeGradient2" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFD300"/><stop offset="1" stop-color="#FF9500"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient2)"/>
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <defs><filter id="shadow2" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="10"/><feOffset dx="0" dy="5" result="offsetblur"/><feFlood flood-color="#000000" flood-opacity="0.15"/><feComposite in2="offsetblur" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow2)"/>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+      <text id="day-name2" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">DIA</text>
+      <text id="day-number2" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">00</text>
+      <script type="text/javascript"><![CDATA[function updateCalendarIcon2(){const now=new Date();let dayName=now.toLocaleDateString('es-ES',{weekday:'short'}).toUpperCase().replace('.','');document.getElementById('day-name2').textContent=dayName;document.getElementById('day-number2').textContent=now.getDate();}updateCalendarIcon2();]]></script>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="ios-clip2"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="blue-grad2" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34AADC"/><stop offset="1" stop-color="#007AFF"/></linearGradient></defs>
+      <g clip-path="url(#ios-clip2)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/><path d="M128 128H350V350H128V128Z" fill="#A5E786"/><path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/><path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/><path d="M520 750H896V896H520V750Z" fill="#FFCC00"/><path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/><path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/><path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+        <circle cx="400" cy="650" r="190" fill="white"/><circle cx="400" cy="650" r="160" fill="url(#blue-grad2)"/><path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../archivos/index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="finder-clip2"><rect x="128" y="128" width="768" height="768" rx="160"/></clipPath><linearGradient id="finder-bg2" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <g clip-path="url(#finder-clip2)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/><rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/><path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/><circle cx="360" cy="420" r="45" fill="#003D75"/><circle cx="664" cy="420" r="45" fill="#003D75"/><path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../chat/index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="messages-clip2"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="messages-bg2" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72E37B"/><stop offset="1" stop-color="#34C759"/></linearGradient></defs>
+      <g clip-path="url(#messages-clip2)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg2)"/><path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/><ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../capacitacion/index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="capGradient2" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#18BFFB"/><stop offset="1" stop-color="#2072F3"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient2)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon" data-href="../perfil/index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+    <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/><clipPath id="a2"><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath><g clip-path="url(#a2)"><path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b2)"/></g><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/><clipPath id="c2"><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath><g clip-path="url(#c2)"><path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d2)"/></g><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/><clipPath id="e2"><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/></clipPath><g clip-path="url(#e2)"><path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f2)"/></g><defs><linearGradient id="b2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)"><stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/><stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/></linearGradient><linearGradient id="d2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)"><stop offset="0" style="stop-color:#51e376;stop-opacity:1"/><stop offset="1" style="stop-color:#34c759;stop-opacity:1"/></linearGradient><linearGradient id="f2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)"><stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/><stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/></linearGradient></defs></svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;"><g><g><g><linearGradient id="Background_13_2" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D3D7DD"/><stop offset="1" stop-color="#888C90"/></linearGradient><path d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_)"></path><circle cx="50" cy="50" r="39" style="fill:#2e2e30"></circle><g><path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path><circle cx="50" cy="50" r="1.5" style="fill:none"></circle><linearGradient id="SVGID_1_2" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D9DADB"/><stop offset="1" stop-color="#7D8082"/></linearGradient><path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.1-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 1 .3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.5-3.4" fill="url(#SVGID_1_2)"/></g></g></g></g></svg><span class="dock__indicator"></span></div>
+  </nav>
+
+  <!-- Modales -->
+  <div id="modal-nuevo-psi" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin:0 0 16px;font-size:18px;">Nuevo Psicologo</h3>
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Cedula Profesional *</label>
+      <input id="new-psi-cedula" placeholder="Cedula profesional" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Nombre Completo *</label>
+      <input id="new-psi-nombre" placeholder="Nombre completo" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Especialidad *</label>
+      <select id="new-psi-especialidad" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Seleccionar especialidad</option>
+        <option value="Psicologia Clinica">Psicologia Clinica</option>
+        <option value="Psicologia Educativa">Psicologia Educativa</option>
+        <option value="Psicologia Social">Psicologia Social</option>
+        <option value="Psicologia Ocupacional">Psicologia Ocupacional</option>
+      </select>
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Universidad</label>
+      <input id="new-psi-universidad" placeholder="Universidad" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Ano de Egreso</label>
+          <input id="new-psi-ano-egreso" type="number" min="1950" max="2030" placeholder="Ano de egreso" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Anos de Experiencia</label>
+          <input id="new-psi-experiencia" type="number" min="0" placeholder="Anos" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        </div>
+      </div>
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Maestria</label>
+      <input id="new-psi-maestria" placeholder="Maestria (opcional)" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Doctorado</label>
+      <input id="new-psi-doctorado" placeholder="Doctorado (opcional)" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Telefono</label>
+      <input id="new-psi-telefono" placeholder="Telefono" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Email</label>
+      <input id="new-psi-email" placeholder="Email" type="email" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Region</label>
+      <select id="new-psi-region" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Seleccionar region</option>
+        <option value="Huejutla">Huejutla</option><option value="Ixmiquilpan">Ixmiquilpan</option><option value="Tula">Tula</option>
+        <option value="Tulancingo">Tulancingo</option><option value="Pachuca">Pachuca</option><option value="Molango">Molango</option>
+        <option value="Actopan">Actopan</option><option value="Tenango de Doria">Tenango de Doria</option>
+        <option value="Jacala">Jacala</option><option value="Atlapexco">Atlapexco</option>
+        <option value="Tlaxcoapan">Tlaxcoapan</option><option value="Zacualtipan">Zacualtipan</option>
+      </select>
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Municipio</label>
+      <select id="new-psi-municipio" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Seleccionar municipio</option>
+        <option value="Huejutla">Huejutla</option><option value="Ixmiquilpan">Ixmiquilpan</option><option value="Tula">Tula</option>
+        <option value="Tulancingo">Tulancingo</option><option value="Pachuca">Pachuca</option><option value="Molango">Molango</option>
+        <option value="Actopan">Actopan</option><option value="Tenango de Doria">Tenango de Doria</option>
+        <option value="Jacala">Jacala</option><option value="Atlapexco">Atlapexco</option>
+        <option value="Tlaxcoapan">Tlaxcoapan</option><option value="Zacualtipan">Zacualtipan</option>
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Equipo</label>
+          <select id="new-psi-equipo" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+            <option value="">Seleccionar equipo</option>
+            <option value="Pachuca I">Pachuca I</option><option value="Pachuca II">Pachuca II</option>
+            <option value="Pachuca III">Pachuca III</option><option value="Pachuca IV">Pachuca IV</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Tipo</label>
+          <select id="new-psi-tipo" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+            <option value="Base">Base</option>
+            <option value="Respaldo">Respaldo</option>
+          </select>
+        </div>
+      </div>
+      <label style="font-size:12px;color:#8E8E93;display:block;margin-bottom:4px;">Foto Profesional</label>
+      <input id="new-psi-foto" type="file" accept="image/*" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #E5E5EA;border-radius:8px;">
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <button onclick="closeModal('modal-nuevo-psi')" style="padding:8px 16px;border:none;background:#E5E5EA;border-radius:8px;cursor:pointer;">Cancelar</button>
+        <button onclick="guardarNuevoPsicologo()" style="padding:8px 16px;border:none;background:#007AFF;color:white;border-radius:8px;cursor:pointer;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-asignar-region" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;padding:24px;max-width:400px;width:90%;">
+      <h3 style="margin:0 0 16px;font-size:18px;">Asignar Region</h3>
+      <p id="asignar-region-nombre" style="margin-bottom:16px;color:#666;"></p>
+      <select id="asignar-region-select" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Seleccionar region</option>
+        <option value="Huejutla">Huejutla</option><option value="Ixmiquilpan">Ixmiquilpan</option><option value="Tula">Tula</option>
+        <option value="Tulancingo">Tulancingo</option><option value="Pachuca">Pachuca</option><option value="Molango">Molango</option>
+        <option value="Actopan">Actopan</option><option value="Tenango de Doria">Tenango de Doria</option>
+        <option value="Jacala">Jacala</option><option value="Atlapexco">Atlapexco</option>
+        <option value="Tlaxcoapan">Tlaxcoapan</option><option value="Zacualtipan">Zacualtipan</option>
+      </select>
+      <select id="asignar-equipo-select" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Seleccionar equipo</option>
+        <option value="Pachuca I">Pachuca I</option><option value="Pachuca II">Pachuca II</option>
+        <option value="Pachuca III">Pachuca III</option><option value="Pachuca IV">Pachuca IV</option>
+      </select>
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <button onclick="closeModal('modal-asignar-region')" style="padding:8px 16px;border:none;background:#E5E5EA;border-radius:8px;cursor:pointer;">Cancelar</button>
+        <button onclick="asignarRegion(currentPsiId)" style="padding:8px 16px;border:none;background:#007AFF;color:white;border-radius:8px;cursor:pointer;">Asignar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal exportar -->
+  <div id="modal-exportar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;padding:24px;max-width:400px;width:90%;">
+      <h3 style="margin:0 0 16px;font-size:18px;">Exportar Lista</h3>
+      <label style="display:block;margin-bottom:8px;font-size:14px;">Formato</label>
+      <select id="export-formato" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="xlsx">Excel (.xlsx)</option>
+        <option value="pdf">PDF</option>
+        <option value="imprimir">Imprimir</option>
+      </select>
+      <label style="display:block;margin-bottom:8px;font-size:14px;">Ambito</label>
+      <select id="export-region" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #E5E5EA;border-radius:8px;">
+        <option value="">Todos los psicologos</option>
+        <option value="Huejutla">Huejutla</option>
+        <option value="Ixmiquilpan">Ixmiquilpan</option>
+        <option value="Tula">Tula</option>
+        <option value="Tulancingo">Tulancingo</option>
+        <option value="Pachuca">Pachuca</option>
+        <option value="Molango">Molango</option>
+        <option value="Actopan">Actopan</option>
+        <option value="Tenango de Doria">Tenango de Doria</option>
+        <option value="Jacala">Jacala</option>
+        <option value="Atlapexco">Atlapexco</option>
+        <option value="Tlaxcoapan">Tlaxcoapan</option>
+        <option value="Zacualtipan">Zacualtipan</option>
+      </select>
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <button onclick="closeModal('modal-exportar')" style="padding:8px 16px;border:none;background:#E5E5EA;border-radius:8px;cursor:pointer;">Cancelar</button>
+        <button onclick="ejecutarExportar()" style="padding:8px 16px;border:none;background:#007AFF;color:white;border-radius:8px;cursor:pointer;">Exportar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Teams/Regions data
+    var teams = [
+      { id: 'pachuca1', name: 'Pachuca I', count: 3 },
+      { id: 'pachuca2', name: 'Pachuca II', count: 2 },
+      { id: 'pachuca3', name: 'Pachuca III', count: 1 },
+      { id: 'pachuca4', name: 'Pachuca IV', count: 1 },
+      { id: 'tula', name: 'Tula', count: 1 },
+      { id: 'tulancingo', name: 'Tulancingo', count: 1 },
+      { id: 'actopan', name: 'Actopan', count: 1 },
+      { id: 'huejutla', name: 'Huejutla', count: 1 }
+    ];
+
+    // Psychologists data
+    var psicologos = [
+      {
+        id: 1, 
+        nombre: 'Dr. Juan Perez', 
+        especialidad: 'Psicologia Clinica', 
+        region: 'Pachuca I', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca1', 
+        avatar: 'JP', 
+        cedula: '12345678', 
+        telefono: '771 123 4567', 
+        escuelas: 12, 
+        visitas: 45, 
+        rating: 4.8, 
+        status: 'online', 
+        email: 'juan.perez@sep.hgo.gob.mx', 
+        nivel: 8, 
+        xp: 2450, 
+        tokens: 350, 
+        racha: 15, 
+        tipo: 'Base',
+        maestria: 'Maestria en Psicologia Educativa',
+        doctorado: 'Doctorado en Psicologia Clinica',
+        universidad: 'UNAM - Universidad Nacional Autonoma de Mexico',
+        anoEgreso: 2012,
+        anosExperiencia: 14,
+        cumplimiento: 92,
+        riesgoRezago: 'bajo',
+        recomendaciones: ['Continuar buen ritmo', 'Mantener cobertura en escuelas prioritarias'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-01-15' },
+          { id: 2, nombre: '10 Visitas', icono: '📊', fecha: '2026-02-20' },
+          { id: 3, nombre: 'Maestro', icono: '🎓', fecha: '2026-03-10' }
+        ]
+      },
+      {
+        id: 2, 
+        nombre: 'Dra. Maria Garcia', 
+        especialidad: 'Psicologia Educativa', 
+        region: 'Pachuca I', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca1', 
+        avatar: 'MG', 
+        cedula: '23456789', 
+        telefono: '771 234 5678', 
+        escuelas: 15, 
+        visitas: 52, 
+        rating: 4.9, 
+        status: 'offline', 
+        email: 'maria.garcia@sep.hgo.gob.mx', 
+        nivel: 12, 
+        xp: 4200, 
+        tokens: 520, 
+        racha: 28, 
+        tipo: 'Base',
+        maestria: 'Maestria en Psicopedagogia',
+        doctorado: 'Doctorado en Educacion',
+        universidad: 'UAH - Universidad Autonoma de Hidalgo',
+        anoEgreso: 2010,
+        anosExperiencia: 16,
+        cumplimiento: 98,
+        riesgoRezago: 'bajo',
+        recomendaciones: ['Excelente desempeno', 'Candidata para coordinacion'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2025-10-10' },
+          { id: 2, nombre: '25 Visitas', icono: '⭐', fecha: '2025-12-15' },
+          { id: 3, nombre: 'Maestro', icono: '🎓', fecha: '2026-01-20' },
+          { id: 4, nombre: 'Top Performer', icono: '🏆', fecha: '2026-03-15' }
+        ]
+      },
+      {
+        id: 3, 
+        nombre: 'Mtra. Ana Torres', 
+        especialidad: 'Psicologia Social', 
+        region: 'Pachuca II', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca2', 
+        avatar: 'AT', 
+        cedula: '34567890', 
+        telefono: '771 345 6789', 
+        escuelas: 8, 
+        visitas: 28, 
+        rating: 4.6, 
+        status: 'online', 
+        email: 'ana.torres@sep.hgo.gob.mx', 
+        nivel: 5, 
+        xp: 1200, 
+        tokens: 180, 
+        racha: 7, 
+        tipo: 'Apoyo',
+        maestria: 'Maestria en Psicologia Social',
+        doctorado: '',
+        universidad: 'IPN - Instituto Politecnico Nacional',
+        anoEgreso: 2018,
+        anosExperiencia: 8,
+        cumplimiento: 85,
+        riesgoRezago: 'medio',
+        recomendaciones: ['Revisar escuelas con cobertura baja', 'Continuar con talleres de emociones'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-02-01' },
+          { id: 2, nombre: '10 Visitas', icono: '📊', fecha: '2026-03-05' }
+        ]
+      },
+      {
+        id: 4, 
+        nombre: 'Lic. Roberto Mendoza', 
+        especialidad: 'Psicologia Infantil', 
+        region: 'Pachuca I', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca1', 
+        avatar: 'RM', 
+        cedula: '45678901', 
+        telefono: '771 456 7890', 
+        escuelas: 10, 
+        visitas: 35, 
+        rating: 4.7, 
+        status: 'away', 
+        email: 'roberto.mendoza@sep.hgo.gob.mx', 
+        nivel: 6, 
+        xp: 1580, 
+        tokens: 220, 
+        racha: 10, 
+        tipo: 'Base',
+        maestria: 'Maestria en Terapia Familiar',
+        doctorado: '',
+        universidad: 'UAEH - Universidad Autonoma del Estado de Hidalgo',
+        anoEgreso: 2015,
+        anosExperiencia: 11,
+        cumplimiento: 88,
+        riesgoRezago: 'bajo',
+        recomendaciones: ['Buen progreso en zona rural', 'Capacitacion en psicologia infantil recomendada'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-01-20' },
+          { id: 2, nombre: '15 Visitas', icono: '🎯', fecha: '2026-02-28' }
+        ]
+      },
+      {
+        id: 5, 
+        nombre: 'Dra. Sofia Cruz', 
+        especialidad: 'Psicologia Clinica', 
+        region: 'Tula', 
+        municipio: 'Tula de Allende',
+        equipo: 'tula', 
+        avatar: 'SC', 
+        cedula: '56789012', 
+        telefono: '771 567 8901', 
+        escuelas: 6, 
+        visitas: 18, 
+        rating: 4.5, 
+        status: 'offline', 
+        email: 'sofia.cruz@sep.hgo.gob.mx', 
+        nivel: 3, 
+        xp: 780, 
+        tokens: 90, 
+        racha: 3, 
+        tipo: 'Comision',
+        maestria: '',
+        doctorado: '',
+        universidad: 'UNAM - Universidad Nacional Autonoma de Mexico',
+        anoEgreso: 2020,
+        anosExperiencia: 6,
+        cumplimiento: 72,
+        riesgoRezago: 'alto',
+        recomendaciones: ['Incrementar visitas mensuales', 'Apoyo en zona urbana', 'Revisar metricas de cumplimiento'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-03-01' }
+        ]
+      },
+      {
+        id: 6, 
+        nombre: 'Mtro. Carlos Jimenez', 
+        especialidad: 'Psicologia Educativa', 
+        region: 'Tulancingo', 
+        municipio: 'Tulancingo',
+        equipo: 'tulancingo', 
+        avatar: 'CJ', 
+        cedula: '67890123', 
+        telefono: '771 678 9012', 
+        escuelas: 9, 
+        visitas: 32, 
+        rating: 4.7, 
+        status: 'online', 
+        email: 'carlos.jimenez@sep.hgo.gob.mx', 
+        nivel: 7, 
+        xp: 2100, 
+        tokens: 300, 
+        racha: 12, 
+        tipo: 'Base',
+        maestria: 'Maestria en Educacion Inclusiva',
+        doctorado: '',
+        universidad: 'UAEH - Universidad Autonoma del Estado de Hidalgo',
+        anoEgreso: 2014,
+        anosExperiencia: 12,
+        cumplimiento: 90,
+        riesgoRezago: 'bajo',
+        recomendaciones: ['Mantener frecuencia de visitas', 'Excelente trabajo en zonas rurales'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2025-12-15' },
+          { id: 2, nombre: '20 Visitas', icono: '📈', fecha: '2026-02-10' },
+          { id: 3, nombre: 'Lider', icono: '👑', fecha: '2026-03-20' }
+        ]
+      },
+      {
+        id: 7, 
+        nombre: 'Lic. Laura Hernandez', 
+        especialidad: 'Psicologia Social', 
+        region: 'Actopan', 
+        municipio: 'Actopan',
+        equipo: 'actopan', 
+        avatar: 'LH', 
+        cedula: '78901234', 
+        telefono: '771 789 0123', 
+        escuelas: 5, 
+        visitas: 15, 
+        rating: 4.3, 
+        status: 'offline', 
+        email: 'laura.hernandez@sep.hgo.gob.mx', 
+        nivel: 2, 
+        xp: 450, 
+        tokens: 50, 
+        racha: 2, 
+        tipo: 'Apoyo',
+        maestria: '',
+        doctorado: '',
+        universidad: 'UAM - Universidad Autonoma Metropolitana',
+        anoEgreso: 2021,
+        anosExperiencia: 5,
+        cumplimiento: 68,
+        riesgoRezago: 'alto',
+        recomendaciones: ['Necesita apoyo en gestion de casos', 'Capacitacion en psicologia social', 'Incrementar visitas'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-02-20' }
+        ]
+      },
+      {
+        id: 8, 
+        nombre: 'Dr. Oscar Rodriguez', 
+        especialidad: 'Psicologia Infantil', 
+        region: 'Pachuca III', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca3', 
+        avatar: 'OR', 
+        cedula: '89012345', 
+        telefono: '771 890 1234', 
+        escuelas: 4, 
+        visitas: 12, 
+        rating: 4.4, 
+        status: 'online', 
+        email: 'oscar.rodriguez@sep.hgo.gob.mx', 
+        nivel: 4, 
+        xp: 980, 
+        tokens: 120, 
+        racha: 5, 
+        tipo: 'Base',
+        maestria: 'Maestria en Neuropsicologia',
+        doctorado: '',
+        universidad: 'UNAM - Universidad Nacional Autonoma de Mexico',
+        anoEgreso: 2019,
+        anosExperiencia: 7,
+        cumplimiento: 78,
+        riesgoRezago: 'medio',
+        recomendaciones: ['Revisar escuelas pendientes', 'Continuar capacitacion en neuropsicologia'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-02-15' },
+          { id: 2, nombre: '10 Visitas', icono: '📊', fecha: '2026-03-25' }
+        ]
+      },
+      {
+        id: 9, 
+        nombre: 'Lic. Diana Flores', 
+        especialidad: 'Psicologia Clinica', 
+        region: 'Huejutla', 
+        municipio: 'Huejutla de Reyes',
+        equipo: 'huejutla', 
+        avatar: 'DF', 
+        cedula: '90123456', 
+        telefono: '771 901 2345', 
+        escuelas: 3, 
+        visitas: 8, 
+        rating: 4.2, 
+        status: 'away', 
+        email: 'diana.flores@sep.hgo.gob.mx', 
+        nivel: 1, 
+        xp: 200, 
+        tokens: 25, 
+        racha: 1, 
+        tipo: 'Base',
+        maestria: '',
+        doctorado: '',
+        universidad: 'UAEH - Universidad Autonoma del Estado de Hidalgo',
+        anoEgreso: 2023,
+        anosExperiencia: 3,
+        cumplimiento: 65,
+        riesgoRezago: 'alto',
+        recomendaciones: ['Apoyo en zona indigena', 'Capacitacion en interculturalidad', 'Incrementar visitas mensuales'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-03-10' }
+        ]
+      },
+      {
+        id: 10, 
+        nombre: 'Mtra. Elena Gomez', 
+        especialidad: 'Psicologia Educativa', 
+        region: 'Pachuca IV', 
+        municipio: 'Pachuca',
+        equipo: 'pachuca4', 
+        avatar: 'EG', 
+        cedula: '01234567', 
+        telefono: '771 012 3456', 
+        escuelas: 7, 
+        visitas: 22, 
+        rating: 4.5, 
+        status: 'offline', 
+        email: 'elena.gomez@sep.hgo.gob.mx', 
+        nivel: 4, 
+        xp: 1050, 
+        tokens: 140, 
+        racha: 6, 
+        tipo: 'Apoyo',
+        maestria: 'Maestria en Educacion Especial',
+        doctorado: '',
+        universidad: 'UH - Universidad de Hidalgo',
+        anoEgreso: 2016,
+        anosExperiencia: 10,
+        cumplimiento: 82,
+        riesgoRezago: 'medio',
+        recomendaciones: ['Buen trabajo en educacion especial', 'Revisar escuelas con baja cobertura'],
+        logros: [
+          { id: 1, nombre: 'Primer Visita', icono: '🏃', fecha: '2026-01-25' },
+          { id: 2, nombre: '15 Visitas', icono: '🎯', fecha: '2026-03-15' }
+        ]
+      }
+    ];
+
+    var currentFilter = 'todos';
+    var currentTeam = null;
+    var currentPsiId = null;
+    var filteredList = [];
+
+    // === FUNCIONES DE NAVEGACION Y UTILIDAD ===
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      syncStore.clear();
+      navigateTo('../login.html');
+    }
+
+    function closeMenus() {
+      var menus = ['archivo', 'editar', 'ver', 'ayuda'];
+      for (var m = 0; m < menus.length; m++) {
+        var menu = document.getElementById('dropdown-' + menus[m]);
+        if (menu) menu.classList.remove('menu-bar__menu--open');
+      }
+    }
+
+    // === ZOOM ===
+    var zoomLevel = 1;
+    function zoomIn() { 
+      zoomLevel = Math.min(zoomLevel + 0.1, 2); 
+      document.body.style.transform = 'scale(' + zoomLevel + ')'; 
+    }
+    function zoomOut() { 
+      zoomLevel = Math.max(zoomLevel - 0.1, 0.5); 
+      document.body.style.transform = 'scale(' + zoomLevel + ')'; 
+    }
+    function zoomReset() { 
+      zoomLevel = 1; 
+      document.body.style.transform = 'scale(1)'; 
+    }
+
+    // === MODALES ===
+    function openModal(id) { 
+      var modal = document.getElementById(id); 
+      if (modal) modal.style.display = 'flex'; 
+    }
+    function closeModal(id) { 
+      var modal = document.getElementById(id); 
+      if (modal) modal.style.display = 'none'; 
+    }
+
+    // === RENDERIZADO DE EQUIPOS ===
+    function renderTeams() {
+      var teamList = document.getElementById('team-list');
+      if (!teamList) return;
+      teamList.innerHTML = '';
+      
+      for (var i = 0; i < teams.length; i++) {
+        var team = teams[i];
+        var count = 0;
+        for (var j = 0; j < psicologos.length; j++) {
+          if (psicologos[j].equipo === team.id) count++;
+        }
+        
+        var div = document.createElement('div');
+        div.className = 'team-item';
+        if (currentTeam === team.id) div.className += ' team-item--active';
+        
+        div.innerHTML = '<span>' + team.name + '</span><span class="team-count">' + count + '</span>';
+        
+        (function(teamId) {
+          div.addEventListener('click', function() {
+            currentTeam = currentTeam === teamId ? null : teamId;
+            renderTeams();
+            filterAndRender();
+            var filters = document.querySelectorAll('.filter');
+            for (var k = 0; k < filters.length; k++) {
+              filters[k].classList.remove('filter--active');
+            }
+            var todosFilter = document.querySelector('[data-filter="todos"]');
+            if (todosFilter) todosFilter.classList.add('filter--active');
+          });
+        })(team.id);
+        
+        teamList.appendChild(div);
+      }
+    }
+
+    // === FILTRADO Y RENDERIZADO DE LISTA ===
+    function filterAndRender() {
+      filteredList = [];
+      for (var i = 0; i < psicologos.length; i++) {
+        filteredList.push(psicologos[i]);
+      }
+      
+      // Filter by status
+      if (currentFilter !== 'todos') {
+        var tempList = [];
+        for (var i = 0; i < filteredList.length; i++) {
+          if (filteredList[i].status === currentFilter) tempList.push(filteredList[i]);
+        }
+        filteredList = tempList;
+      }
+      
+      // Filter by team
+      if (currentTeam) {
+        var tempList = [];
+        for (var i = 0; i < filteredList.length; i++) {
+          if (filteredList[i].equipo === currentTeam) tempList.push(filteredList[i]);
+        }
+        filteredList = tempList;
+      }
+      
+      renderList();
+      
+      // Select first if available
+      if (filteredList.length > 0) {
+        selectPsi(filteredList[0].id);
+      } else {
+        var detail = document.getElementById('psi-detail');
+        if (detail) detail.innerHTML = '';
+      }
+    }
+
+    function renderList() {
+      var list = document.getElementById('psi-list');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      if (filteredList.length === 0) {
+        list.innerHTML = '<div style="padding:24px;text-align:center;color:#8E8E93;">No se encontraron psicologos</div>';
+        return;
+      }
+      
+      // Group by first letter
+      var grouped = {};
+      for (var i = 0; i < filteredList.length; i++) {
+        var p = filteredList[i];
+        var letter = p.nombre.charAt(0);
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push(p);
+      }
+      
+      var keys = Object.keys(grouped).sort();
+      for (var k = 0; k < keys.length; k++) {
+        var letter = keys[k];
+        // Section header
+        var section = document.createElement('div');
+        section.className = 'section';
+        section.textContent = letter;
+        list.appendChild(section);
+        
+        for (var j = 0; j < grouped[letter].length; j++) {
+          var p = grouped[letter][j];
+          var item = document.createElement('div');
+          item.className = 'item';
+          item.dataset.id = p.id;
+          
+          item.innerHTML = '<div class="avatar">' + p.avatar + '<div class="status status--' + p.status + '"></div></div><div class="info"><div class="name">' + p.nombre + '</div><div class="specialty">' + p.especialidad + ' - ' + p.municipio + '</div></div>';
+          
+          (function(psiId) {
+            item.addEventListener('click', function() {
+              selectPsi(psiId);
+            });
+          })(p.id);
+          
+          list.appendChild(item);
+        }
+      }
+    }
+
+    // === BUSQUEDA ===
+    function search(text) {
+      text = text.toLowerCase();
+      filteredList = [];
+      for (var i = 0; i < psicologos.length; i++) {
+        var p = psicologos[i];
+        var searchText = p.nombre.toLowerCase() + ' ' + p.especialidad.toLowerCase() + ' ' + p.region.toLowerCase() + ' ' + p.municipio.toLowerCase() + ' ' + p.universidad.toLowerCase();
+        if (searchText.indexOf(text) !== -1) {
+          filteredList.push(p);
+        }
+      }
+      renderList();
+      if (filteredList.length > 0) {
+        selectPsi(filteredList[0].id);
+      }
+    }
+
+    // === SELECCION Y DETALLE DE PSICOLOGO ===
+    function selectPsi(id) {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === id) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) return;
+      
+      currentPsiId = id;
+      
+      // Update active state in list
+      var items = document.querySelectorAll('.item');
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.remove('item--active');
+        if (parseInt(items[i].dataset.id) === id) {
+          items[i].classList.add('item--active');
+        }
+      }
+      
+      var detail = document.getElementById('psi-detail');
+      if (!detail) return;
+
+      var riesgoClass = 'ai-indicator--riesgo-alto';
+      if (psi.riesgoRezago === 'bajo') riesgoClass = 'ai-indicator--riesgo-bajo';
+      else if (psi.riesgoRezago === 'medio') riesgoClass = 'ai-indicator--riesgo-medio';
+
+      var estudios = '';
+      if (psi.maestria && psi.doctorado) estudios = psi.maestria + ' / ' + psi.doctorado;
+      else if (psi.maestria) estudios = psi.maestria;
+      else if (psi.doctorado) estudios = psi.doctorado;
+      else estudios = 'Licenciatura';
+
+      var statusText = 'Desconectado';
+      if (psi.status === 'online') statusText = 'En linea';
+      else if (psi.status === 'away') statusText = 'Ausente';
+
+      detail.innerHTML = 
+        '<div class="header">' +
+          '<div class="avatar-lg" style="cursor:pointer;" onclick="showProfileModal(' + psi.id + ')">' + psi.avatar + '</div>' +
+          '<div class="header-info">' +
+            '<div class="title">' + psi.nombre + '</div>' +
+            '<div class="subtitle">' + psi.especialidad + ' - ' + psi.region + '</div>' +
+            '<span class="status-badge status-badge--' + psi.status + '">' + statusText + '</span>' +
+          '</div>' +
+        '</div>' +
+        
+        '<div class="stats">' +
+          '<div class="stat"><div class="stat-value">' + psi.escuelas + '</div><div class="stat-label">Escuelas</div></div>' +
+          '<div class="stat"><div class="stat-value">' + psi.visitas + '</div><div class="stat-label">Visitas</div></div>' +
+          '<div class="stat"><div class="stat-value">' + psi.rating + '</div><div class="stat-label">Rating</div></div>' +
+          '<div class="stat"><div class="stat-value">' + psi.tipo + '</div><div class="stat-label">Tipo</div></div>' +
+        '</div>' +
+        
+        '<div class="gamification">' +
+          '<div class="gamification__item"><div class="gamification__value">' + psi.nivel + '</div><div class="gamification__label">Nivel</div></div>' +
+          '<div class="gamification__item"><div class="gamification__value">' + psi.xp + '</div><div class="gamification__label">XP</div></div>' +
+          '<div class="gamification__item"><div class="gamification__value">' + psi.tokens + '</div><div class="gamification__label">Tokens</div></div>' +
+          '<div class="gamification__item"><div class="gamification__value">' + psi.racha + '</div><div class="gamification__label">Dias</div></div>' +
+        '</div>' +
+        
+        '<div class="card">' +
+          '<div class="card-title">Datos de Contacto</div>' +
+          '<div class="card-row"><span class="card-label">Cedula</span><span class="card-value">' + psi.cedula + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Email</span><span class="card-value">' + psi.email + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Telefono</span><span class="card-value">' + psi.telefono + '</span></div>' +
+        '</div>' +
+        
+        '<div class="card">' +
+          '<div class="card-title">Informacion Academica</div>' +
+          '<div class="card-row"><span class="card-label">Estudios</span><span class="card-value">' + estudios + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Universidad</span><span class="card-value">' + psi.universidad + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Ano de Egreso</span><span class="card-value">' + psi.anoEgreso + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Anos de Experiencia</span><span class="card-value">' + psi.anosExperiencia + ' anos</span></div>' +
+        '</div>' +
+        
+        '<div class="card">' +
+          '<div class="card-title">Asignacion</div>' +
+          '<div class="card-row"><span class="card-label">Region</span><span class="card-value">' + psi.region + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Municipio</span><span class="card-value">' + psi.municipio + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Equipo</span><span class="card-value">' + psi.equipo + '</span></div>' +
+          '<div class="card-row"><span class="card-label">Tipo</span><span class="card-value">' + psi.tipo + '</span></div>' +
+        '</div>' +
+        
+        '<div class="card">' +
+          '<div class="card-title">Indicadores IA</div>' +
+          '<div class="ai-indicators">' +
+            '<div class="ai-indicator ai-indicator--cumplimiento"><div class="ai-indicator__value">' + psi.cumplimiento + '%</div><div class="ai-indicator__label">Cumplimiento</div></div>' +
+            '<div class="ai-indicator ' + riesgoClass + '"><div class="ai-indicator__value">' + psi.riesgoRezago.toUpperCase() + '</div><div class="ai-indicator__label">Riesgo de Rezago</div></div>' +
+          '</div>' +
+          '<div class="recommendations" style="margin-top:16px;">' +
+            '<div style="font-size:12px;font-weight:600;color:#8E8E93;margin-bottom:8px;text-transform:uppercase;">Recomendaciones</div>' +
+            getRecomendacionesHTML(psi.recomendaciones) +
+          '</div>' +
+        '</div>' +
+        
+        '<div class="card">' +
+          '<div class="card-title">Logros Desbloqueados</div>' +
+          '<div class="achievements">' +
+            getLogrosHTML(psi.logros) +
+          '</div>' +
+        '</div>' +
+        
+        '<div class="actions">' +
+          '<button class="btn btn--primary" onclick="showProfileModal(' + psi.id + ')">Ver Perfil Completo</button>' +
+          '<button class="btn btn--secondary" onclick="openSendMessage()">Enviar Mensaje</button>' +
+          '<button class="btn btn--secondary" onclick="openAssignSchool()">Asignar Region</button>' +
+        '</div>';
+    }
+
+    function getRecomendacionesHTML(recomendaciones) {
+      var html = '';
+      for (var i = 0; i < recomendaciones.length; i++) {
+        html += '<div class="recommendation">' + recomendaciones[i] + '</div>';
+      }
+      return html;
+    }
+
+    function getLogrosHTML(logros) {
+      var html = '';
+      for (var i = 0; i < logros.length; i++) {
+        var l = logros[i];
+        html += '<div class="achievement">' +
+          '<span class="achievement__icon">' + l.icono + '</span>' +
+          '<div class="achievement__info">' +
+            '<div class="achievement__name">' + l.nombre + '</div>' +
+            '<div class="achievement__date">' + l.fecha + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      return html;
+    }
+
+    // === MODAL DE PERFIL COMPLETO ===
+    function showProfileModal(id) {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === id) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) return;
+
+      var modal = document.getElementById('profile-modal');
+      var content = document.getElementById('modal-content');
+      if (!modal || !content) return;
+
+      var riesgoClass = 'ai-indicator--riesgo-alto';
+      if (psi.riesgoRezago === 'bajo') riesgoClass = 'ai-indicator--riesgo-bajo';
+      else if (psi.riesgoRezago === 'medio') riesgoClass = 'ai-indicator--riesgo-medio';
+
+      var estudios = '';
+      if (psi.maestria && psi.doctorado) estudios = psi.maestria + ' / ' + psi.doctorado;
+      else if (psi.maestria) estudios = psi.maestria;
+      else if (psi.doctorado) estudios = psi.doctorado;
+      else estudios = 'Licenciatura';
+
+      var statusText = 'Desconectado';
+      if (psi.status === 'online') statusText = 'En linea';
+      else if (psi.status === 'away') statusText = 'Ausente';
+
+      content.innerHTML = 
+        '<div class="modal-header">' +
+          '<div class="modal-avatar">' + psi.avatar + '</div>' +
+          '<div class="modal-header-info">' +
+            '<div class="modal-title">' + psi.nombre + '</div>' +
+            '<div class="modal-subtitle">' + psi.especialidad + ' - ' + estudios + '</div>' +
+            '<span class="status-badge status-badge--' + psi.status + '">' + statusText + '</span>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Informacion Academica</div>' +
+          '<div class="modal-grid">' +
+            '<div class="modal-field"><div class="modal-field__label">Universidad</div><div class="modal-field__value">' + psi.universidad + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Ano de Egreso</div><div class="modal-field__value">' + psi.anoEgreso + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Anos de Experiencia</div><div class="modal-field__value">' + psi.anosExperiencia + ' anos</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Cedula Profesional</div><div class="modal-field__value">' + psi.cedula + '</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Contacto</div>' +
+          '<div class="modal-grid">' +
+            '<div class="modal-field"><div class="modal-field__label">Email</div><div class="modal-field__value">' + psi.email + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Telefono</div><div class="modal-field__value">' + psi.telefono + '</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Asignacion</div>' +
+          '<div class="modal-grid">' +
+            '<div class="modal-field"><div class="modal-field__label">Region</div><div class="modal-field__value">' + psi.region + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Municipio</div><div class="modal-field__value">' + psi.municipio + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Equipo</div><div class="modal-field__value">' + psi.equipo + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Tipo</div><div class="modal-field__value">' + psi.tipo + '</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Estadisticas</div>' +
+          '<div class="modal-grid">' +
+            '<div class="modal-field"><div class="modal-field__label">Escuelas</div><div class="modal-field__value">' + psi.escuelas + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Visitas</div><div class="modal-field__value">' + psi.visitas + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Rating</div><div class="modal-field__value">' + psi.rating + '</div></div>' +
+            '<div class="modal-field"><div class="modal-field__label">Nivel</div><div class="modal-field__value">' + psi.nivel + ' (' + psi.xp + ' XP)</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Indicadores IA</div>' +
+          '<div class="ai-indicators">' +
+            '<div class="ai-indicator ai-indicator--cumplimiento"><div class="ai-indicator__value">' + psi.cumplimiento + '%</div><div class="ai-indicator__label">Cumplimiento</div></div>' +
+            '<div class="ai-indicator ' + riesgoClass + '"><div class="ai-indicator__value">' + psi.riesgoRezago.toUpperCase() + '</div><div class="ai-indicator__label">Riesgo de Rezago</div></div>' +
+          '</div>' +
+          '<div class="recommendations">' +
+            '<div class="modal-section-title" style="margin-top:12px;">Recomendaciones</div>' +
+            getRecomendacionesHTML(psi.recomendaciones) +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-section">' +
+          '<div class="modal-section-title">Logros Desbloqueados</div>' +
+          '<div class="achievements">' +
+            getLogrosHTML(psi.logros) +
+          '</div>' +
+        '</div>' +
+
+        '<div class="modal-actions">' +
+          '<button class="btn btn--secondary" onclick="sendMessageFromModal(' + psi.id + ')">Enviar Mensaje</button>' +
+          '<button class="btn btn--primary" onclick="openAssignSchoolFromModal(' + psi.id + ')">Asignar Region</button>' +
+        '</div>';
+
+      modal.classList.add('modal-overlay--open');
+    }
+
+    function closeProfileModal() {
+      var modal = document.getElementById('profile-modal');
+      if (modal) modal.classList.remove('modal-overlay--open');
+    }
+
+    // === ACCIONES DE PSICOLOGOS ===
+    function openAssignSchool() {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === currentPsiId) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) { alert('Selecciona un psicologo primero'); return; }
+      document.getElementById('asignar-region-nombre').textContent = 'Asignar region a: ' + psi.nombre;
+      openModal('modal-asignar-region');
+    }
+
+    function openAssignSchoolFromModal(id) {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === id) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) return;
+      currentPsiId = psi.id;
+      document.getElementById('asignar-region-nombre').textContent = 'Asignar region a: ' + psi.nombre;
+      openModal('modal-asignar-region');
+    }
+
+    function openSendMessage() {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === currentPsiId) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) {
+        alert('Selecciona un psicologo primero');
+        return;
+      }
+      sendMessageFromModal(psi.id);
+    }
+
+    function sendMessageFromModal(id) {
+      syncStore.set('chat_contact', id);
+      navigateTo('../chat/index.html');
+    }
+
+    function asignarRegion(psiId) {
+      var psi = null;
+      for (var i = 0; i < psicologos.length; i++) {
+        if (psicologos[i].id === psiId) {
+          psi = psicologos[i];
+          break;
+        }
+      }
+      if (!psi) return;
+      
+      var regionSelect = document.getElementById('asignar-region-select');
+      var equipoSelect = document.getElementById('asignar-equipo-select');
+      
+      if (regionSelect) psi.region = regionSelect.value;
+      if (regionSelect) psi.municipio = regionSelect.value;
+      if (equipoSelect) psi.equipo = equipoSelect.value;
+      
+      filterAndRender(); 
+      closeModal('modal-asignar-region'); 
+      alert('Region asignada correctamente a ' + psi.nombre);
+    }
+
+    // === EXPORTAR LISTA ===
+    function exportarLista() {
+      var csv = 'Nombre,Especialidad,Universidad,Region,Equipo,Estado\n';
+      for (var i = 0; i < psicologos.length; i++) {
+        var p = psicologos[i];
+        var estado = 'Desconectado';
+        if (p.status === 'online') estado = 'En linea';
+        else if (p.status === 'away') estado = 'Ausente';
+        
+        csv += '"' + p.nombre + '","' + p.especialidad + '","' + p.universidad + '","' + (p.region||'') + '","' + (p.equipo||'') + '","' + estado + '"\n'; 
+      }
+      var blob = new Blob([csv], {type:'text/csv'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'psicologos_' + new Date().toISOString().split('T')[0] + '.csv'; 
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // === EXPORTAR CON MODAL ===
+    function ejecutarExportar() {
+      var formato = document.getElementById('export-formato').value;
+      var region = document.getElementById('export-region').value;
+      var lista = region ? psicologos.filter(function(p) { return p.region === region; }) : psicologos;
+      var fecha = new Date().toISOString().split('T')[0];
+      var nombre = region ? 'psicologos_' + region + '_' + fecha : 'psicologos_todos_' + fecha;
+      
+      if (formato === 'xlsx') {
+        exportarExcel(lista, nombre + '.xlsx');
+      } else if (formato === 'imprimir') {
+        window.print();
+      } else {
+        exportarPDF(lista, nombre + '.pdf');
+      }
+      closeModal('modal-exportar');
+    }
+
+    function exportarExcel(lista, filename) {
+      var data = lista.map(function(p) {
+        return {
+          'Nombre': p.nombre,
+          'Especialidad': p.especialidad,
+          'Universidad': p.universidad,
+          'Telefono': p.telefono,
+          'Email': p.email,
+          'Cedula': p.cedula,
+          'Region': p.region,
+          'Municipio': p.municipio,
+          'Equipo': p.equipo,
+          'Estado': p.status === 'online' ? 'En linea' : (p.status === 'away' ? 'Ausente' : 'Desconectado'),
+          'AnoEgreso': p.anoEgreso,
+          'AnosExperiencia': p.anosExperiencia,
+          'Maestria': p.maestria,
+          'Doctorado': p.doctorado,
+          'Tipo': p.tipo,
+          'Nivel': p.nivel,
+          'XP': p.xp,
+          'Tokens': p.tokens,
+          'Racha': p.racha,
+          'Escuelas': p.escuelas,
+          'Visitas': p.visitas,
+          'Rating': p.rating,
+          'Cumplimiento': p.cumplimiento + '%',
+          'RiesgoRezago': p.riesgoRezago,
+          'Recomendaciones': (p.recomendaciones || []).join('; ')
+        };
+      });
+      var ws = XLSX.utils.json_to_sheet(data);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Psicologos');
+      XLSX.writeFile(wb, filename);
+    }
+
+    function exportarPDF(lista, filename) {
+      var doc = new jspdf.jsPDF();
+      var y = 20;
+      doc.setFontSize(16);
+      doc.text('Lista de Psicologos', 105, y, { align: 'center' });
+      y += 15;
+      doc.setFontSize(9);
+      var headers = ['Nombre', 'Especialidad', 'Region', 'Estado'];
+      var cols = [60, 40, 35, 25];
+      var x = 5;
+      for (var i = 0; i < headers.length; i++) {
+        doc.text(headers[i], x, y);
+        x += cols[i];
+      }
+      y += 5;
+      for (var i = 0; i < lista.length; i++) {
+        if (y > 270) { doc.addPage(); y = 20; }
+        x = 5;
+        var p = lista[i];
+        var estado = p.status === 'online' ? 'En linea' : (p.status === 'away' ? 'Ausente' : 'Desconectado');
+        var row = [p.nombre.substring(0,25), p.especialidad.substring(0,15), p.region.substring(0,12), estado.substring(0,8)];
+        for (var j = 0; j < row.length; j++) {
+          doc.text(String(row[j]), x, y);
+          x += cols[j];
+        }
+        y += 7;
+      }
+      doc.save(filename);
+    }
+
+    function imprimirLista() {
+      var printWindow = window.open('', '_blank');
+      var html = '<!DOCTYPE html><html><head><title>Lista de Psicologos</title>';
+      html += '<style>body{font-family:Arial,sans-serif;padding:20px;}';
+      html += 'h1{text-align:center;margin-bottom:20px;}';
+      html += 'table{width:100%;border-collapse:collapse;}';
+      html += 'th,td{padding:8px;border:1px solid #ddd;text-align:left;font-size:12px;}';
+      html += 'th{background:#f5f5f5;}';
+      html += '@media print{body{-webkit-print-color-adjust:exact;}}</style></head><body>';
+      html += '<h1>Lista de Psicologos</h1>';
+      html += '<table><thead><tr><th>Nombre</th><th>Especialidad</th><th>Universidad</th><th>Region</th><th>Municipio</th><th>Telefono</th><th>Email</th><th>Estado</th></tr></thead><tbody>';
+      for (var i = 0; i < psicologos.length; i++) {
+        var p = psicologos[i];
+        var estado = p.status === 'online' ? 'En linea' : (p.status === 'away' ? 'Ausente' : 'Desconectado');
+        html += '<tr><td>' + p.nombre + '</td><td>' + p.especialidad + '</td><td>' + (p.universidad||'') + '</td><td>' + (p.region||'') + '</td><td>' + (p.municipio||'') + '</td><td>' + (p.telefono||'') + '</td><td>' + (p.email||'') + '</td><td>' + estado + '</td></tr>';
+      }
+      html += '</tbody></table></body></html>';
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(function() { printWindow.print(); }, 250);
+    }
+
+    // === GUARDAR NUEVO PSICOLOGO ===
+    function guardarNuevoPsicologo() {
+      var nombre = document.getElementById('new-psi-nombre').value;
+      var cedula = document.getElementById('new-psi-cedula').value;
+      var especialidad = document.getElementById('new-psi-especialidad').value;
+      if (!nombre || !especialidad) { alert('Nombre y especialidad son obligatorios'); return; }
+      if (!cedula) { alert('Cedula profesional es obligatoria'); return; }
+      
+      var fotoInput = document.getElementById('new-psi-foto');
+      var fotoUrl = '';
+      var avatar = nombre.split(' ').map(function(n) { return n[0]; }).join('').substring(0,2).toUpperCase();
+      if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+        fotoUrl = URL.createObjectURL(fotoInput.files[0]);
+      }
+      
+      var nuevo = { 
+        id: psicologos.length + 1, 
+        nombre: nombre,
+        cedula: cedula,
+        especialidad: especialidad,
+        universidad: document.getElementById('new-psi-universidad').value,
+        telefono: document.getElementById('new-psi-telefono').value,
+        email: document.getElementById('new-psi-email').value,
+        region: document.getElementById('new-psi-region').value,
+        municipio: document.getElementById('new-psi-municipio').value || document.getElementById('new-psi-region').value,
+        equipo: document.getElementById('new-psi-equipo').value,
+        avatar: avatar,
+        foto: fotoUrl,
+        status: 'offline',
+        nivel: 1, 
+        xp: 0, 
+        tokens: 0, 
+        racha: 0,
+        escuelas: 0,
+        visitas: 0,
+        rating: 0,
+        tipo: document.getElementById('new-psi-tipo').value || 'Base',
+        maestria: document.getElementById('new-psi-maestria').value || '',
+        doctorado: document.getElementById('new-psi-doctorado').value || '',
+        anoEgreso: parseInt(document.getElementById('new-psi-ano-egreso').value) || new Date().getFullYear(),
+        anosExperiencia: parseInt(document.getElementById('new-psi-experiencia').value) || 0,
+        cumplimiento: 0,
+        riesgoRezago: 'alto',
+        recomendaciones: ['Nuevo psicologo - por evaluar'],
+        logros: []
+      };
+      
+      psicologos.push(nuevo); 
+      filterAndRender(); 
+      closeModal('modal-nuevo-psi'); 
+      alert('Psicologo guardado correctamente');
+    }
+
+    // === INICIALIZACION ===
+    document.addEventListener('DOMContentLoaded', function() {
+      // DEBUG: Check syncStore availability
+      console.log('DEBUG: syncStore available?', typeof syncStore);
+      console.log('DEBUG: syncStore.get(logged) =', syncStore.get('logged'));
+      // Check session
+      if (syncStore.get('logged') !== 'true') {
+        navigateTo('../login.html');
+        return;
+      }
+      
+      // User info
+      var usuario = syncStore.get('usuario') || 'Usuario';
+      var avatarEl = document.getElementById('user-avatar');
+      var storedAvatar = syncStore.get('avatar_image') || localStorage.getItem('sep_avatar_image');
+      if (avatarEl) {
+        if (storedAvatar) {
+          avatarEl.style.backgroundImage = 'url(' + storedAvatar + ')';
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+        } else {
+          var iniciales = usuario.split(' ').map(function(n) { return n[0]; }).join('').substring(0,2);
+          avatarEl.textContent = iniciales;
+        }
+      }
+      
+      // Escuchar cambios de avatar desde perfil
+      window.addEventListener('avatar-updated', function() {
+        var storedAvatar = localStorage.getItem('sep_avatar_image');
+        if (storedAvatar && avatarEl) {
+          avatarEl.style.backgroundImage = 'url(' + storedAvatar + ')';
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+        }
+      });
+      
+      // Logout
+      var logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.addEventListener('click', logout);
+      
+      // Dock navigation
+      var dockIcons = document.querySelectorAll('.dock__icon');
+      for (var i = 0; i < dockIcons.length; i++) {
+        (function(icon) {
+          icon.addEventListener('click', function() {
+            var href = icon.dataset.href;
+            if (href) navigateTo(href);
+          });
+        })(dockIcons[i]);
+      }
+      
+      // Search
+      var searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          search(e.target.value);
+        });
+      }
+      
+      // Filters
+      var filters = document.querySelectorAll('.filter');
+      for (var i = 0; i < filters.length; i++) {
+        (function(filter) {
+          filter.addEventListener('click', function() {
+            var allFilters = document.querySelectorAll('.filter');
+            for (var j = 0; j < allFilters.length; j++) {
+              allFilters[j].classList.remove('filter--active');
+            }
+            filter.classList.add('filter--active');
+            currentFilter = filter.dataset.filter;
+            currentTeam = null;
+            renderTeams();
+            filterAndRender();
+          });
+        })(filters[i]);
+      }
+      
+      // Render teams and list
+      renderTeams();
+      filterAndRender();
+      
+      // Clock
+      var clockEl = document.getElementById('clock');
+      if (clockEl) {
+        setInterval(function() {
+          clockEl.textContent = new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
+        }, 1000);
+      }
+      
+      // Menu bar dropdowns
+      var menus = ['archivo', 'editar', 'ver', 'ayuda'];
+      for (var i = 0; i < menus.length; i++) {
+        (function(menuName) {
+          var btn = document.getElementById('menu-' + menuName);
+          var dropdown = document.getElementById('dropdown-' + menuName);
+          if (btn && dropdown) {
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              var isOpen = dropdown.classList.contains('menu-bar__menu--open');
+              closeMenus();
+              if (!isOpen) dropdown.classList.add('menu-bar__menu--open');
+            });
+          }
+        })(menus[i]);
+      }
+      
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.menu-bar__dropdown')) {
+          closeMenus();
+        }
+      });
+
+      // Close modal on overlay click
+      var profileModal = document.getElementById('profile-modal');
+      if (profileModal) {
+        profileModal.addEventListener('click', function(e) {
+          if (e.target === profileModal) {
+            closeProfileModal();
+          }
+        });
+      }
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeProfileModal();
+        }
+      });
+    });
+  </script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>

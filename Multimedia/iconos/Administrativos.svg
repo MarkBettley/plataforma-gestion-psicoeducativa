@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo redondeado estilo macOS (Squircle) con degradado -->
+  <defs>
+    <linearGradient id="folderGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#72D1FC"/>
+      <stop offset="1" stop-color="#4AB3F2"/>
+    </linearGradient>
+  </defs>
+  <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient)"/>
+  
+  <!-- Icono de usuario individual (Silueta) -->
+  <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+  <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+</svg>

@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="ios-clip">
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+    </clipPath>
+    <linearGradient id="blue-grad" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34AADC"/>
+      <stop offset="1" stop-color="#007AFF"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#ios-clip)">
+    <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/> <path d="M128 128H350V350H128V128Z" fill="#A5E786"/> <path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/> <path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/> <path d="M520 750H896V896H520V750Z" fill="#FFCC00"/> <path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/> <path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/>
+    <path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+
+    <circle cx="400" cy="650" r="190" fill="white"/> <circle cx="400" cy="650" r="160" fill="url(#blue-grad)"/> <path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+  </g>
+</svg>

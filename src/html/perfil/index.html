@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil - Plataforma Psicoeducativa</title>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="/src/js/data/sync-store.js"></script>
+  <style>
+    .perfil { display: flex; flex-direction: column; min-height: 100vh; padding-top: 28px; background: #F2F2F7; padding-bottom: 80px; }
+    .cover { height: 180px; background: linear-gradient(135deg,#007AFF,#5856D6); position: relative; background-size: cover; background-position: center; }
+    .edit-cover { position: absolute; bottom: 12px; right: 12px; padding: 6px 12px; background: rgba(0,0,0,0.5); color: white; border-radius: 9999px; font-size: 13px; border: none; cursor: pointer; }
+    .edit-cover:hover { background: rgba(0,0,0,0.7); }
+    .avatar { width: 150px; height: 150px; border-radius: 50%; background: white; border: 4px solid #F2F2F7; position: absolute; bottom: -75px; left: 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 600; color: #5856D6; overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .info { padding: 90px 20px 16px; }
+    .name { font-size: 26px; font-weight: 700; }
+    .title { font-size: 16px; color: #8E8E93; }
+    .location { font-size: 14px; color: #8E8E93; }
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 16px 20px; }
+    .stat { background: white; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 22px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: #8E8E93; }
+    .section { padding: 16px 20px; }
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .badge { background: white; border-radius: 12px; padding: 16px; text-align: center; }
+    .badge-icon { font-size: 28px; }
+    .badge-name { font-size: 13px; font-weight: 500; margin-top: 8px; }
+    .card { background: white; border-radius: 12px; padding: 16px; }
+    .card-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #E5E5EA; }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: #8E8E93; }
+    .card-value { font-weight: 500; }
+    .gamification-card { background: white; border-radius: 12px; padding: 20px; }
+    .gamification-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .gamification-level { font-size: 18px; font-weight: 700; color: #007AFF; }
+    .gamification-badge { font-size: 14px; color: #8E8E93; }
+    .xp-bar-container { background: #E5E5EA; border-radius: 9999px; height: 8px; margin: 8px 0; overflow: hidden; }
+    .xp-bar-fill { height: 100%; background: linear-gradient(90deg,#007AFF,#5856D6); border-radius: 9999px; transition: width 0.3s ease; }
+    .xp-text { font-size: 13px; color: #8E8E93; margin-bottom: 16px; }
+    .gamification-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+    .gamification-stat { text-align: center; }
+    .gamification-stat-value { font-size: 20px; font-weight: 700; color: #34C759; }
+    .gamification-stat-label { font-size: 12px; color: #8E8E93; }
+    .gamification-actions { display: flex; gap: 12px; }
+    .btn { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+    .btn-primary { background: #007AFF; color: white; }
+    .btn-primary:hover { background: #0056CC; }
+    .btn-secondary { background: #E5E5EA; color: #1C1C1E; }
+    .btn-secondary:hover { background: #D1D1D6; }
+    .menu-bar__logo { cursor: pointer; }
+    .menu-bar a { cursor: pointer; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 20px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #8E8E93; }
+    .modal-close:hover { color: #1C1C1E; }
+    .achievement-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #E5E5EA; }
+    .achievement-item:last-child { border-bottom: none; }
+    .achievement-icon { font-size: 32px; }
+    .achievement-info { flex: 1; }
+    .achievement-name { font-weight: 600; font-size: 14px; }
+    .achievement-desc { font-size: 12px; color: #8E8E93; }
+    .store-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #E5E5EA; }
+    .store-item:last-child { border-bottom: none; }
+    .store-icon { font-size: 32px; }
+    .store-info { flex: 1; }
+    .store-name { font-weight: 600; font-size: 14px; }
+    .store-desc { font-size: 12px; color: #8E8E93; }
+    .store-cost { font-weight: 600; color: #FF9500; font-size: 14px; }
+    .file-input-hidden { display: none; }
+    .menu-bar__item { position: relative; display: inline-block; }
+    .menu-bar__dropdown { position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); min-width: 180px; z-index: 1000; display: none; }
+    .menu-bar__dropdown.active { display: block; }
+    .menu-bar__dropdown-item { padding: 6px 12px; font-size: 13px; cursor: pointer; }
+    .menu-bar__dropdown-item:hover { background: #007AFF; color: white; }
+    .menu-bar__dropdown-separator { height: 1px; background: #E5E5EA; margin: 4px 0; }
+    .kpi-card { background: #F2F2F7; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .kpi-title { font-size: 16px; font-weight: 700; color: #007AFF; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+    .kpi-item { background: white; border-radius: 8px; padding: 12px; }
+    .kpi-item-label { font-size: 12px; color: #8E8E93; }
+    .kpi-item-value { font-size: 20px; font-weight: 700; color: #1C1C1E; }
+    .kpi-item-sub { font-size: 11px; color: #34C759; }
+    .okr-section { margin-bottom: 16px; }
+    .okr-objective { font-size: 14px; font-weight: 600; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #007AFF; }
+    .okr-kr { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+    .okr-kr-icon { font-size: 14px; }
+    .okr-kr-text { flex: 1; font-size: 13px; }
+    .okr-progress { width: 100px; height: 6px; background: #E5E5EA; border-radius: 9999px; overflow: hidden; }
+    .okr-progress-fill { height: 100%; background: #34C759; border-radius: 9999px; }
+    .okr-progress-text { font-size: 11px; color: #8E8E93; min-width: 40px; text-align: right; }
+    .smart-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #E5E5EA; }
+    .smart-item:last-child { border-bottom: none; }
+    .smart-icon { font-size: 24px; }
+    .smart-info { flex: 1; }
+    .smart-goal { font-size: 14px; font-weight: 500; }
+    .smart-criteria { font-size: 11px; color: #8E8E93; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header class="menu-bar">
+    <div class="menu-bar__left">
+      <span class="menu-bar__logo" onclick="navigateTo('/src/html/dashboard.html')">SEP</span>
+      <div class="menu-bar__item">
+        <a href="#" onclick="toggleDropdown(event, 'archivo-dropdown')">Archivo</a>
+        <div class="menu-bar__dropdown" id="archivo-dropdown">
+          <div class="menu-bar__dropdown-item" onclick="openModal('kpis-modal'); closeDropdown('archivo-dropdown')">KPIs / Métricas</div>
+          <div class="menu-bar__dropdown-separator"></div>
+          <div class="menu-bar__dropdown-item" onclick="handleMenuAction('Exportar perfil')">Exportar perfil</div>
+          <div class="menu-bar__dropdown-item" onclick="handleMenuAction('Imprimir perfil')">Imprimir perfil</div>
+          <div class="menu-bar__dropdown-separator"></div>
+          <div class="menu-bar__dropdown-item" onclick="handleMenuAction('Cerrar')">Cerrar</div>
+        </div>
+      </div>
+      <div class="menu-bar__item">
+        <a href="#" onclick="toggleDropdown(event, 'editar-dropdown')">Editar</a>
+        <div class="menu-bar__dropdown" id="editar-dropdown">
+          <div class="menu-bar__dropdown-item" onclick="closeDropdown('editar-dropdown'); document.getElementById('cover-input').click()">Editar portada</div>
+        </div>
+      </div>
+      <div class="menu-bar__item">
+        <a href="#" onclick="toggleDropdown(event, 'ver-dropdown')">Ver</a>
+        <div class="menu-bar__dropdown" id="ver-dropdown">
+          <div class="menu-bar__dropdown-item" onclick="openModal('logros-modal'); closeDropdown('ver-dropdown')">Logros y premios</div>
+        </div>
+      </div>
+      <div class="menu-bar__item">
+        <a href="#" onclick="toggleDropdown(event, 'ayuda-dropdown')">Ayuda</a>
+        <div class="menu-bar__dropdown" id="ayuda-dropdown">
+          <div class="menu-bar__dropdown-item" onclick="openModal('acerca-modal'); closeDropdown('ayuda-dropdown')">Acerca de perfil</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar__right"><button class="menu-bar__right-icon" id="logout-btn">⬋</button><div class="menu-bar__right-avatar" id="user-avatar">MG</div><div class="menu-bar__time" id="clock">10:30</div></div>
+  </header>
+  <main class="perfil" style="padding-bottom: 80px;">
+    <div class="cover" id="cover">
+      <button class="edit-cover" onclick="document.getElementById('cover-input').click()">Editar Portada</button>
+      <input type="file" id="cover-input" class="file-input-hidden" accept="image/*" onchange="changeCover(event)">
+      <input type="file" id="avatar-input" class="file-input-hidden" accept="image/*" onchange="changeAvatar(event)">
+      <div class="avatar" id="avatar" onclick="document.getElementById('avatar-input').click()">MG</div>
+    </div>
+    <div class="info">
+      <div class="name" id="info-nombre">Dra. María García López</div>
+      <div class="title" id="info-titulo">Psicóloga Clínica</div>
+      <div class="location" id="info-location">Pachuca, Hidalgo • maria.garcia@institucion.mx</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-value" id="stat-escuelas">45</div><div class="stat-label">Escuelas</div></div>
+      <div class="stat"><div class="stat-value" id="stat-personas">1,234</div><div class="stat-label">Personas</div></div>
+      <div class="stat"><div class="stat-value" id="stat-cursos">12</div><div class="stat-label">Cursos</div></div>
+      <div class="stat"><div class="stat-value" id="stat-logros">28</div><div class="stat-label">Logros</div></div>
+    </div>
+
+    <!-- Sección Gamificación -->
+    <div class="section">
+      <div class="section-title">Gamificación</div>
+      <div class="gamification-card">
+        <div class="gamification-header">
+          <div class="gamification-level">Nivel <span id="nivel">12</span> - <span id="nivel-label">Experto</span></div>
+          <div class="gamification-badge">🏅</div>
+        </div>
+        <div class="xp-bar-container">
+          <div class="xp-bar-fill" id="xp-bar" style="width: 70%"></div>
+        </div>
+        <div class="xp-text">XP: <span id="xp-actual">2,450</span> / <span id="xp-max">3,500</span></div>
+        <div class="gamification-stats">
+          <div class="gamification-stat">
+            <div class="gamification-stat-value" id="stat-tokens">850</div>
+            <div class="gamification-stat-label">Tokens</div>
+          </div>
+          <div class="gamification-stat">
+            <div class="gamification-stat-value" id="stat-racha">15</div>
+            <div class="gamification-stat-label">Racha (días)</div>
+          </div>
+          <div class="gamification-stat">
+            <div class="gamification-stat-value">🔥</div>
+            <div class="gamification-stat-label">En racha</div>
+          </div>
+        </div>
+        <div class="gamification-actions">
+          <button class="btn btn-primary" onclick="openModal('logros-modal')">Ver Logros</button>
+          <button class="btn btn-secondary" onclick="openModal('tienda-modal')">Ver Tienda</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Información Personal</div>
+      <div class="card">
+        <div class="card-row"><span class="card-label">Nombre completo</span><span class="card-value" id="per-nombre">Dra. María García López</span></div>
+        <div class="card-row"><span class="card-label">Correo electrónico</span><span class="card-value" id="per-email">maria.garcia@institucion.mx</span></div>
+        <div class="card-row"><span class="card-label">Teléfono</span><span class="card-value" id="per-telefono">771 123 4567</span></div>
+        <div class="card-row"><span class="card-label">Fecha de nacimiento</span><span class="card-value" id="per-nacimiento">15/05/1990</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Información Profesional</div>
+      <div class="card">
+        <div class="card-row"><span class="card-label">Cédula profesional</span><span class="card-value" id="prof-cedula">12345678</span></div>
+        <div class="card-row"><span class="card-label">Especialidad</span><span class="card-value" id="prof-especialidad">Psicología Clínica</span></div>
+        <div class="card-row"><span class="card-label">Universidad</span><span class="card-value" id="prof-universidad">UAEH</span></div>
+        <div class="card-row"><span class="card-label">Año de egreso</span><span class="card-value" id="prof-egreso">2015</span></div>
+        <div class="card-row"><span class="card-label">Región asignada</span><span class="card-value" id="prof-region">Pachuca I</span></div>
+        <div class="card-row"><span class="card-label">Municipio</span><span class="card-value" id="prof-municipio">Pachuca</span></div>
+        <div class="card-row"><span class="card-label">Años de experiencia</span><span class="card-value" id="prof-experiencia">12 años</span></div>
+        <div class="card-row"><span class="card-label">Tipo</span><span class="card-value" id="prof-tipo">Base</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Formación Académica</div>
+      <div class="card">
+        <div class="card-row"><span class="card-label">Maestría</span><span class="card-value" id="prof-maestria">Maestría en Psicopedagogía</span></div>
+        <div class="card-row"><span class="card-label">Doctorado</span><span class="card-value" id="prof-doctorado">No registrado</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Estadísticas de Trabajo</div>
+      <div class="card">
+        <div class="card-row"><span class="card-label">Intervenciones realizadas</span><span class="card-value" id="stat-intervenciones">52</span></div>
+        <div class="card-row"><span class="card-label">Seguimientos activos</span><span class="card-value" id="stat-seguimientos">18</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Logros Recientes</div>
+      <div class="grid">
+        <div class="badge"><div class="badge-icon">🏆</div><div class="badge-name">Primer Curso</div></div>
+        <div class="badge"><div class="badge-icon">🔥</div><div class="badge-name">Racha 7 días</div></div>
+        <div class="badge"><div class="badge-icon">⭐</div><div class="badge-name">10 Visitas</div></div>
+        <div class="badge"><div class="badge-icon">🎓</div><div class="badge-name">Certificada</div></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Logros -->
+  <div class="modal-overlay" id="logros-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🏆 Mis Logros</div>
+        <button class="modal-close" onclick="closeModal('logros-modal')">&times;</button>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-info">
+          <div class="achievement-name">Primer Curso</div>
+          <div class="achievement-desc">Completaste tu primer curso</div>
+        </div>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">🔥</div>
+        <div class="achievement-info">
+          <div class="achievement-name">Racha 7 días</div>
+          <div class="achievement-desc">Iniciaste sesión 7 días seguidos</div>
+        </div>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">⭐</div>
+        <div class="achievement-info">
+          <div class="achievement-name">10 Visitas</div>
+          <div class="achievement-desc">Realizaste 10 visitas escolares</div>
+        </div>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">🎓</div>
+        <div class="achievement-info">
+          <div class="achievement-name">Certificada</div>
+          <div class="achievement-desc">Obtuviste tu primera certificación</div>
+        </div>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">📚</div>
+        <div class="achievement-info">
+          <div class="achievement-name">Biblioteca</div>
+          <div class="achievement-desc">Accediste a 50 recursos</div>
+        </div>
+      </div>
+      <div class="achievement-item">
+        <div class="achievement-icon">💯</div>
+        <div class="achievement-info">
+          <div class="achievement-name">100% Asistencia</div>
+          <div class="achievement-desc">Asistencia perfecta por un mes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tienda -->
+  <div class="modal-overlay" id="tienda-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🛒 Tienda de Recompensas</div>
+        <button class="modal-close" onclick="closeModal('tienda-modal')">&times;</button>
+      </div>
+      <p style="font-size: 14px; color: #8E8E93; margin-bottom: 16px;">Tokens disponibles: <strong id="modal-tokens">850</strong> 🪙</p>
+      <div class="store-item">
+        <div class="store-icon">🎨</div>
+        <div class="store-info">
+          <div class="store-name">Tema Oscuro</div>
+          <div class="store-desc">Desbloquea el modo oscuro</div>
+        </div>
+        <div class="store-cost">200 🪙</div>
+      </div>
+      <div class="store-item">
+        <div class="store-icon">🏷️</div>
+        <div class="store-info">
+          <div class="store-name">Insignia Premium</div>
+          <div class="store-desc">Muestra tu estatus premium</div>
+        </div>
+        <div class="store-cost">500 🪙</div>
+      </div>
+      <div class="store-item">
+        <div class="store-icon">📊</div>
+        <div class="store-info">
+          <div class="store-name">Reporte Avanzado</div>
+          <div class="store-desc">Estadísticas detalladas</div>
+        </div>
+        <div class="store-cost">350 🪙</div>
+      </div>
+      <div class="store-item">
+        <div class="store-icon">🎯</div>
+        <div class="store-info">
+          <div class="store-name">Filtros Avanzados</div>
+          <div class="store-desc">Filtra escuelas por más criterios</div>
+        </div>
+        <div class="store-cost">150 🪙</div>
+      </div>
+      <div class="store-item">
+        <div class="store-icon">🏆</div>
+        <div class="store-info">
+          <div class="store-name">Marco de Perfil</div>
+          <div class="store-desc">Personaliza tu avatar</div>
+        </div>
+        <div class="store-cost">300 🪙</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Acerca de Perfil -->
+  <div class="modal-overlay" id="acerca-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">ℹ️ Acerca de Perfil</div>
+        <button class="modal-close" onclick="closeModal('acerca-modal')">&times;</button>
+      </div>
+      <div style="font-size: 14px; line-height: 1.6;">
+        <p style="margin-bottom: 16px;"><strong>Descripción:</strong></p>
+        <p style="margin-bottom: 16px; color: #8E8E93;">La página de Perfil es tu espacio personal en la Plataforma Psicoeducativa SEP. Aquí puedes visualizar y gestionar tu información profesional, estadísticas de trabajo, logros y recompensas.</p>
+        
+        <p style="margin-bottom: 8px;"><strong>Funcionalidades:</strong></p>
+        <ul style="margin-bottom: 16px; padding-left: 20px; color: #8E8E93;">
+          <li style="margin-bottom: 8px;"><strong>Información Personal:</strong> Gestiona tus datos de contacto como nombre, correo y teléfono.</li>
+          <li style="margin-bottom: 8px;"><strong>Información Profesional:</strong> Visualiza tu cédula, especialidad, universidad, región asignada y años de experiencia.</li>
+          <li style="margin-bottom: 8px;"><strong>Estadísticas de Trabajo:</strong> Consulta el número de intervenciones realizadas y seguimientos activos.</li>
+          <li style="margin-bottom: 8px;"><strong>Gamificación:</strong> tracking de tu nivel, experiencia (XP), tokens, racha de días y logros obtenidos.</li>
+          <li style="margin-bottom: 8px;"><strong>Editar Portada:</strong> Cambia la imagen de portada de tu perfil haciendo clic en el botón "Editar Portada".</li>
+          <li style="margin-bottom: 8px;"><strong>Logros y Premios:</strong> Accede desde el menú "Ver" para ver todos tus logros y premios.</li>
+          <li style="margin-bottom: 8px;"><strong>Exportar/Imprimir:</strong> Exporta tu perfil como PDF o imprímelo desde el menú "Archivo".</li>
+        </ul>
+        
+        <p style="margin-bottom: 8px;"><strong>Información Útil:</strong></p>
+        <ul style="padding-left: 20px; color: #8E8E93;">
+          <li style="margin-bottom: 8px;">Tu nivel en la plataforma aumenta conforme ganas XP completando actividades.</li>
+          <li style="margin-bottom: 8px;">Los tokens pueden canjearse por recompensas en la Tienda de Recompensas.</li>
+          <li style="margin-bottom: 8px;">Mantén tu racha de días iniciada sesión consecutivamente para obtener bonificaciones.</li>
+          <li style="margin-bottom: 8px;">Los cambios en tu foto de perfil se sincronizan automáticamente con otras páginas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal KPIs -->
+  <div class="modal-overlay" id="kpis-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📊 Panel de Métricas</div>
+        <button class="modal-close" onclick="closeModal('kpis-modal')">&times;</button>
+      </div>
+
+      <!-- KPIs Section -->
+      <div class="kpi-card">
+        <div class="kpi-title">📈 KPIs - Key Performance Indicators</div>
+        <div class="kpi-grid">
+          <div class="kpi-item">
+            <div class="kpi-item-label">Visitas realizadas</div>
+            <div class="kpi-item-value">42 / 50</div>
+            <div class="kpi-item-sub">↑ 84% de la meta</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item-label">Escuela con más intervenciones</div>
+            <div class="kpi-item-value">Escuela Benito Juárez</div>
+            <div class="kpi-item-sub">15 intervenciones</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item-label">Tasa de resolución</div>
+            <div class="kpi-item-value">78%</div>
+            <div class="kpi-item-sub">↑ 5% vs mes anterior</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item-label">Horas capacitación</div>
+            <div class="kpi-item-value">24 / 40</div>
+            <div class="kpi-item-sub">60% completado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OKRs Section -->
+      <div class="kpi-card">
+        <div class="kpi-title">🎯 OKRs - Objectives and Key Results</div>
+        <div class="okr-section">
+          <div class="okr-objective">Objetivo 1: Mejorar atención en escuelas de zona rural</div>
+          <div class="okr-kr">
+            <span class="okr-kr-icon">🔹</span>
+            <span class="okr-kr-text">KR1: 20% más visitas a escuelas rurales</span>
+            <div class="okr-progress"><div class="okr-progress-fill" style="width: 65%"></div></div>
+            <span class="okr-progress-text">65%</span>
+          </div>
+          <div class="okr-kr">
+            <span class="okr-kr-icon">🔹</span>
+            <span class="okr-kr-text">KR2: 100% de reportes completados</span>
+            <div class="okr-progress"><div class="okr-progress-fill" style="width: 90%"></div></div>
+            <span class="okr-progress-text">90%</span>
+          </div>
+        </div>
+        <div class="okr-section" style="margin-bottom: 0;">
+          <div class="okr-objective">Objetivo 2: Desarrollo profesional</div>
+          <div class="okr-kr">
+            <span class="okr-kr-icon">🔹</span>
+            <span class="okr-kr-text">KR1: Completar 3 cursos del programa</span>
+            <div class="okr-progress"><div class="okr-progress-fill" style="width: 67%"></div></div>
+            <span class="okr-progress-text">2/3</span>
+          </div>
+          <div class="okr-kr">
+            <span class="okr-kr-icon">🔹</span>
+            <span class="okr-kr-text">KR2: Obtener certificación en intervención en crisis</span>
+            <div class="okr-progress"><div class="okr-progress-fill" style="width: 0%"></div></div>
+            <span class="okr-progress-text">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metas SMART Section -->
+      <div class="kpi-card" style="margin-bottom: 0;">
+        <div class="kpi-title">🏁 Metas SMART</div>
+        <div class="smart-item">
+          <span class="smart-icon">🏫</span>
+          <div class="smart-info">
+            <div class="smart-goal">Visitar 5 escuelas por semana</div>
+            <div class="smart-criteria">S: Específica | M: Medible | A: Alcanzable | R: Relevante | T: Temporizable</div>
+          </div>
+        </div>
+        <div class="smart-item">
+          <span class="smart-icon">👥</span>
+          <div class="smart-info">
+            <div class="smart-goal">Atender 30 estudiantes/mes con seguimiento</div>
+            <div class="smart-criteria">S: Específica | M: Medible | A: Alcanzable | R: Relevante | T: Temporizable</div>
+          </div>
+        </div>
+        <div class="smart-item">
+          <span class="smart-icon">⏱️</span>
+          <div class="smart-info">
+            <div class="smart-goal">Reducir tiempo de respuesta a 24hrs</div>
+            <div class="smart-criteria">S: Específica | M: Medible | A: Alcanzable | R: Relevante | T: Temporizable</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="dock">
+    <div class="dock__icon" data-href="../psicologos/index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../administrativos/index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="folderGradient3" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient3)"/>
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="homeGradient3" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFD300"/><stop offset="1" stop-color="#FF9500"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient3)"/>
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <defs><filter id="shadow3" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="10"/><feOffset dx="0" dy="5" result="offsetblur"/><feFlood flood-color="#000000" flood-opacity="0.15"/><feComposite in2="offsetblur" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow3)"/>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+      <text id="day-name3" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">DIA</text>
+      <text id="day-number3" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">00</text>
+      <script type="text/javascript"><![CDATA[function updateCalendarIcon3(){const now=new Date();let dayName=now.toLocaleDateString('es-ES',{weekday:'short'}).toUpperCase().replace('.','');document.getElementById('day-name3').textContent=dayName;document.getElementById('day-number3').textContent=now.getDate();}updateCalendarIcon3();]]></script>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="ios-clip3"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="blue-grad3" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34AADC"/><stop offset="1" stop-color="#007AFF"/></linearGradient></defs>
+      <g clip-path="url(#ios-clip3)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/><path d="M128 128H350V350H128V128Z" fill="#A5E786"/><path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/><path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/><path d="M520 750H896V896H520V750Z" fill="#FFCC00"/><path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/><path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/><path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+        <circle cx="400" cy="650" r="190" fill="white"/><circle cx="400" cy="650" r="160" fill="url(#blue-grad3)"/><path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../archivos/index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="finder-clip3"><rect x="128" y="128" width="768" height="768" rx="160"/></clipPath><linearGradient id="finder-bg3" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <g clip-path="url(#finder-clip3)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/><rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/><path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/><circle cx="360" cy="420" r="45" fill="#003D75"/><circle cx="664" cy="420" r="45" fill="#003D75"/><path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../chat/index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="messages-clip3"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="messages-bg3" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72E37B"/><stop offset="1" stop-color="#34C759"/></linearGradient></defs>
+      <g clip-path="url(#messages-clip3)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg3)"/><path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/><ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../capacitacion/index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="capGradient3" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#18BFFB"/><stop offset="1" stop-color="#2072F3"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient3)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+    <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/><clipPath id="a3"><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath><g clip-path="url(#a3)"><path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b3)"/></g><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/><clipPath id="c3"><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath><g clip-path="url(#c3)"><path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d3)"/></g><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/><clipPath id="e3"><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/></clipPath><g clip-path="url(#e3)"><path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f3)"/></g><defs><linearGradient id="b3" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)"><stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/><stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/></linearGradient><linearGradient id="d3" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)"><stop offset="0" style="stop-color:#51e376;stop-opacity:1"/><stop offset="1" style="stop-color:#34c759;stop-opacity:1"/></linearGradient><linearGradient id="f3" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)"><stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/><stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/></linearGradient></defs></svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;"><g><g><g><linearGradient id="Background_13_3" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D3D7DD"/><stop offset="1" stop-color="#888C90"/></linearGradient><path d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_3)"></path><circle cx="50" cy="50" r="39" style="fill:#2e2e30"></circle><g><path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path><circle cx="50" cy="50" r="1.5" style="fill:none"></circle><linearGradient id="SVGID_1_3" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D9DADB"/><stop offset="1" stop-color="#7D8082"/></linearGradient><path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.1-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 1 .3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.5-3.4" fill="url(#SVGID_1_3)"/></g></g></g></g></svg><span class="dock__indicator"></span></div>
+  </nav>
+  <script>
+    function toggleDropdown(event, id) {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropdown = document.getElementById(id);
+      const isActive = dropdown.classList.contains('active');
+      
+      // Cerrar todos los dropdowns primero
+      document.querySelectorAll('.menu-bar__dropdown').forEach(d => d.classList.remove('active'));
+      
+      // Si no estaba activo, abrirlo
+      if (!isActive) {
+        dropdown.classList.add('active');
+      }
+    }
+
+    function closeDropdown(id) {
+      const dropdown = document.getElementById(id);
+      if (dropdown) {
+        dropdown.classList.remove('active');
+      }
+    }
+
+    function handleMenuAction(action) {
+      if (action === 'Exportar perfil') {
+        generarPDFCV();
+      } else if (action === 'Imprimir perfil') {
+        imprimirPerfil();
+      } else {
+        alert('Acción: ' + action);
+      }
+      // Cerrar todos los dropdowns
+      document.querySelectorAll('.menu-bar__dropdown').forEach(d => d.classList.remove('active'));
+    }
+
+    function generarPDFBlob() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Colors
+      const primaryColor = [0, 122, 255];
+      const darkColor = [28, 28, 30];
+      const grayColor = [142, 142, 147];
+      
+      // Header
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CV - Perfil Profesional', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Plataforma Psicoeducativa SEP', 105, 30, { align: 'center' });
+      
+      // Información Personal
+      let y = 50;
+      doc.setTextColor(...darkColor);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Información Personal', 15, y);
+      
+      y += 10;
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(15, y, 195, y);
+      
+      y += 10;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      
+      const infoPersonal = [
+        ['Nombre completo:', usuario.nombre],
+        ['Correo electrónico:', usuario.email],
+        ['Teléfono:', usuario.telefono],
+        ['Fecha de nacimiento:', usuario.nacimiento],
+        ['Municipio:', usuario.municipio || 'Pachuca']
+      ];
+      
+      infoPersonal.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...grayColor);
+        doc.text(label, 15, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...darkColor);
+        doc.text(value.toString(), 70, y);
+        y += 8;
+      });
+      
+      // Información Profesional
+      y += 10;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...darkColor);
+      doc.text('Información Profesional', 15, y);
+      
+      y += 8;
+      doc.setDrawColor(...primaryColor);
+      doc.line(15, y, 195, y);
+      
+      y += 10;
+      doc.setFontSize(11);
+      
+      const infoProfesional = [
+        ['Cédula profesional:', usuario.cedula],
+        ['Especialidad:', usuario.especialidad],
+        ['Universidad:', usuario.universidad],
+        ['Año de egreso:', usuario.egreso],
+        ['Años de experiencia:', usuario.anosExperiencia ? usuario.anosExperiencia + ' años' : '12 años'],
+        ['Región asignada:', usuario.region],
+        ['Tipo:', usuario.tipo || 'Base'],
+        ['Maestría:', usuario.maestria || 'No registrada'],
+        ['Doctorado:', usuario.doctorado || 'No registrado']
+      ];
+      
+      infoProfesional.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...grayColor);
+        doc.text(label, 15, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...darkColor);
+        doc.text(value.toString(), 70, y);
+        y += 8;
+      });
+      
+      // Estadísticas de Trabajo
+      y += 10;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...darkColor);
+      doc.text('Estadísticas de Trabajo', 15, y);
+      
+      y += 8;
+      doc.setDrawColor(...primaryColor);
+      doc.line(15, y, 195, y);
+      
+      y += 10;
+      doc.setFontSize(11);
+      
+      const stats = [
+        ['Escuelas asignadas:', usuario.escuelas.toString()],
+        ['Personas atendidas:', usuario.personas.toString()],
+        ['Intervenciones:', usuario.intervenciones ? usuario.intervenciones.toString() : '45'],
+        ['Seguimientos activos:', usuario.seguimientos ? usuario.seguimientos.toString() : '12'],
+        ['Cursos completados:', usuario.cursos.toString()]
+      ];
+      
+      stats.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...grayColor);
+        doc.text(label, 15, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...darkColor);
+        doc.text(value.toString(), 70, y);
+        y += 8;
+      });
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(...grayColor);
+      doc.text('Documento generado el ' + new Date().toLocaleDateString('es-MX'), 105, 280, { align: 'center' });
+      doc.text('Plataforma Psicoeducativa - SEP Hidalgo', 105, 285, { align: 'center' });
+      
+      return doc.output('blob');
+    }
+
+    function imprimirPerfil() {
+      const blob = generarPDFBlob();
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = function() {
+          printWindow.print();
+        };
+      }
+    }
+
+    function generarPDFCV() {
+      const blob = generarPDFBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'CV_' + usuario.nombre.replace(/\s+/g, '_') + '.pdf';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.menu-bar__item')) {
+        document.querySelectorAll('.menu-bar__dropdown').forEach(d => d.classList.remove('active'));
+      }
+    });
+
+    const usuario = {
+      nombre: 'Dra. María García López',
+      titulo: 'Psicóloga Clínica',
+      region: 'Pachuca I',
+      equipo: 'Equipo Alpha',
+      email: 'maria.garcia@institucion.mx',
+      telefono: '771 123 4567',
+      nacimiento: '15/05/1990',
+      cedula: '12345678',
+      especialidad: 'Psicología Clínica',
+      universidad: 'UAEH',
+      egreso: '2015',
+      municipio: 'Pachuca',
+      anosExperiencia: 12,
+      tipo: 'Base',
+      maestria: 'Maestría en Psicopedagogía',
+      doctorado: '',
+      intervenciones: 52,
+      seguimientos: 18,
+      nivel: 12,
+      xp: 2450,
+      xpMax: 3500,
+      tokens: 850,
+      racha: 15,
+      escuelas: 45,
+      personas: 1234,
+      cursos: 12,
+      logros: 28
+    };
+
+    function navigateTo(p) { window.location.href = p; }
+
+    function logout() {
+      sessionStorage.clear();
+      syncStore.clear();
+      window.location.href = '../login.html';
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function changeCover(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('cover').style.background = 'url(' + e.target.result + ') center/cover no-repeat';
+          syncStore.set('cover_image', e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function changeAvatar(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const avatar = document.getElementById('avatar');
+          avatar.innerHTML = '<img src="' + e.target.result + '" alt="Avatar">';
+          syncStore.set('avatar_image', e.target.result);
+          window.dispatchEvent(new Event('avatar-updated'));
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Escuchar actualizaciones de avatar desde otras páginas
+    window.addEventListener('avatar-updated', function() {
+      const storedAvatar = localStorage.getItem('sep_avatar_image');
+      const storedCover = localStorage.getItem('sep_cover_image');
+      if (storedAvatar) {
+        const avatar = document.getElementById('avatar');
+        avatar.innerHTML = '<img src="' + storedAvatar + '" alt="Avatar">';
+      }
+      if (storedCover) {
+        document.getElementById('cover').style.background = 'url(' + storedCover + ') center/cover no-repeat';
+      }
+    });
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (syncStore.get('logged') !== 'true') { window.location.href = '../login.html'; return; }
+
+      // Cargar datos del usuario
+      document.getElementById('info-nombre').textContent = usuario.nombre;
+      document.getElementById('info-titulo').textContent = usuario.titulo;
+      document.getElementById('info-location').textContent = 'Pachuca, Hidalgo • ' + usuario.email;
+
+      document.getElementById('per-nombre').textContent = usuario.nombre;
+      document.getElementById('per-email').textContent = usuario.email;
+      document.getElementById('per-telefono').textContent = usuario.telefono;
+      document.getElementById('per-nacimiento').textContent = usuario.nacimiento;
+
+      document.getElementById('prof-cedula').textContent = usuario.cedula;
+      document.getElementById('prof-especialidad').textContent = usuario.especialidad;
+      document.getElementById('prof-universidad').textContent = usuario.universidad;
+      document.getElementById('prof-egreso').textContent = usuario.egreso;
+      document.getElementById('prof-region').textContent = usuario.region;
+      document.getElementById('prof-municipio').textContent = usuario.municipio || 'Pachuca';
+      document.getElementById('prof-experiencia').textContent = (usuario.anosExperiencia || 12) + ' años';
+      document.getElementById('prof-tipo').textContent = usuario.tipo || 'Base';
+      document.getElementById('prof-maestria').textContent = usuario.maestria || 'No registrada';
+      document.getElementById('prof-doctorado').textContent = usuario.doctorado || 'No registrado';
+      document.getElementById('stat-intervenciones').textContent = usuario.intervenciones || 52;
+      document.getElementById('stat-seguimientos').textContent = usuario.seguimientos || 18;
+
+      document.getElementById('nivel').textContent = usuario.nivel;
+      document.getElementById('nivel-label').textContent = usuario.nivel >= 10 ? 'Experto' : usuario.nivel >= 5 ? 'Avanzado' : 'Principiante';
+      document.getElementById('xp-actual').textContent = formatNumber(usuario.xp);
+      document.getElementById('xp-max').textContent = formatNumber(usuario.xpMax);
+      document.getElementById('xp-bar').style.width = (usuario.xp / usuario.xpMax * 100) + '%';
+      document.getElementById('stat-tokens').textContent = formatNumber(usuario.tokens);
+      document.getElementById('stat-racha').textContent = usuario.racha;
+
+      document.getElementById('stat-escuelas').textContent = formatNumber(usuario.escuelas);
+      document.getElementById('stat-personas').textContent = formatNumber(usuario.personas);
+      document.getElementById('stat-cursos').textContent = usuario.cursos;
+      document.getElementById('stat-logros').textContent = usuario.logros;
+      document.getElementById('modal-tokens').textContent = formatNumber(usuario.tokens);
+
+      // Avatar initials
+      const storedAvatar = syncStore.get('avatar_image') || localStorage.getItem('sep_avatar_image');
+      const storedCover = syncStore.get('cover_image') || localStorage.getItem('sep_cover_image');
+      const initials = usuario.nombre.split(' ').map(n => n[0]).join('').substring(0,2);
+      
+      // Cargar imagen guardada o usar iniciales
+      if (storedAvatar) {
+        document.getElementById('avatar').innerHTML = '<img src="' + storedAvatar + '" alt="Avatar">';
+        document.getElementById('user-avatar').textContent = initials;
+      } else {
+        document.getElementById('avatar').innerHTML = initials + '<input type="file" id="avatar-input" class="file-input-hidden" accept="image/*" onchange="changeAvatar(event)">';
+      }
+      
+      if (storedCover) {
+        document.getElementById('cover').style.background = 'url(' + storedCover + ') center/cover no-repeat';
+      }
+      
+      document.getElementById('user-avatar').textContent = initials;
+
+      document.getElementById('logout-btn').addEventListener('click', logout);
+      document.querySelectorAll('.dock__icon').forEach(i => i.addEventListener('click', () => navigateTo(i.dataset.href)));
+
+      // Cerrar modales al hacer click fuera
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+          if (e.target === this) { this.classList.remove('active'); }
+        });
+      });
+
+      setInterval(() => {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

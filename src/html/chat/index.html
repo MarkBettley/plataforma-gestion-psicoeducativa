@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Plataforma Psicoeducativa</title>
+  <script src="/src/js/data/sync-store.js"></script>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <style>
+    .chat { display: flex; height: 100vh; padding-top: 28px; background: #F2F2F7; }
+    .sidebar { width: 280px; background: white; border-right: 1px solid #E5E5EA; display: flex; flex-direction: column; }
+    .search { padding: 12px; }
+    .search input { width: 100%; padding: 10px 14px; border-radius: 9999px; background: #E5E5EA; border: none; font-size: 15px; }
+    .tabs { display: flex; border-bottom: 1px solid #E5E5EA; }
+    .tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab--active { border-bottom-color: #007AFF; color: #007AFF; }
+    .list { flex: 1; overflow-y: auto; }
+    .item { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+    .item:hover { background: rgba(0,0,0,0.03); }
+    .item--active { background: rgba(0,122,255,0.1); }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#5856D6,#AF52DE); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; position: relative; }
+    .online { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #34C759; border-radius: 50%; border: 2px solid white; }
+    .info { flex: 1; overflow: hidden; }
+    .name { font-weight: 500; font-size: 14px; }
+    .msg { font-size: 12px; color: #8E8E93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .time { font-size: 11px; color: #8E8E93; }
+    .main { flex: 1; display: flex; flex-direction: column; background: white; }
+    .header { padding: 12px 16px; border-bottom: 1px solid #E5E5EA; display: flex; align-items: center; gap: 12px; }
+    .header-title { font-size: 16px; font-weight: 600; }
+    .header-status { font-size: 12px; color: #34C759; }
+    .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .msg { max-width: 70%; padding: 10px 14px; border-radius: 18px; font-size: 14px; }
+    .msg--sent { align-self: flex-end; background: #007AFF; color: white; }
+    .msg--received { align-self: flex-start; background: #E5E5EA; }
+    .input { padding: 12px 16px; border-top: 1px solid #E5E5EA; display: flex; gap: 8px; }
+    .input input { flex: 1; padding: 10px 14px; border-radius: 9999px; background: #E5E5EA; border: none; font-size: 14px; }
+    .input button { width: 36px; height: 36px; border-radius: 50%; background: #007AFF; border: none; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="menu-bar"><div class="menu-bar__left"><span class="menu-bar__logo" onclick="navigateTo('/src/html/dashboard.html')">SEP</span></div><div class="menu-bar__right"><button id="logout-btn">⬋</button><div id="user-avatar">MG</div><div id="clock">10:30</div></div></header>
+  <main class="chat" style="padding-bottom: 80px;">
+    <aside class="sidebar">
+      <div class="search"><input type="text" id="search-input" placeholder="Buscar chat..."></div>
+       <div class="tabs"><div class="tab tab--active" data-tab="chats">Chats</div><div class="tab" data-tab="canales">Canales</div></div>
+      <div class="list" id="list-container">
+        <!-- Los contactos y canales se renderizan dinámicamente -->
+      </div>
+    </aside>
+    <section class="main">
+      <div class="header"><div class="avatar" style="width:36px;height:36px;font-size:14px">JP<div class="online"></div></div><div><div class="header-title">Dr. Juan Pérez</div><div class="header-status">En línea</div></div></div>
+      <div class="messages">
+        <div class="msg msg--received">Hola! ¿Cómo va la visita?</div>
+        <div class="msg msg--sent">Muy bien! Ya estamos en la segunda ronda</div>
+        <div class="msg msg--sent">Los directivos están muy contentos</div>
+        <div class="msg msg--received">Excelente!</div>
+      </div>
+      <div class="input"><input type="text" placeholder="Mensaje..."><button>➤</button></div>
+    </section>
+  </main>
+  <nav class="dock">
+    <div class="dock__icon" data-href="../psicologos/index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../administrativos/index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="folderGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient)"/>
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="homeGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFD300"/><stop offset="1" stop-color="#FF9500"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient)"/>
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <defs><filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="10"/><feOffset dx="0" dy="5" result="offsetblur"/><feFlood flood-color="#000000" flood-opacity="0.15"/><feComposite in2="offsetblur" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow)"/>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+      <text id="day-name" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">DIA</text>
+      <text id="day-number" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">00</text>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="ios-clip"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="blue-grad" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34AADC"/><stop offset="1" stop-color="#007AFF"/></linearGradient></defs>
+      <g clip-path="url(#ios-clip)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/><path d="M128 128H350V350H128V128Z" fill="#A5E786"/><path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/><path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/><path d="M520 750H896V896H520V750Z" fill="#FFCC00"/><path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/><path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/>
+        <path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+        <circle cx="400" cy="650" r="190" fill="white"/><circle cx="400" cy="650" r="160" fill="url(#blue-grad)"/><path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../archivos/index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="finder-clip"><rect x="128" y="128" width="768" height="768" rx="160"/></clipPath><linearGradient id="finder-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <g clip-path="url(#finder-clip)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/>
+        <rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/>
+        <path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/>
+        <circle cx="360" cy="420" r="45" fill="#003D75"/><circle cx="664" cy="420" r="45" fill="#003D75"/>
+        <path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="messages-clip"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="messages-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72E37B"/><stop offset="1" stop-color="#34C759"/></linearGradient></defs>
+      <g clip-path="url(#messages-clip)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg)"/>
+        <path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/>
+        <ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../capacitacion/index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="capGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#18BFFB"/><stop offset="1" stop-color="#2072F3"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon" data-href="../perfil/index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+      <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/>
+      <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+      <clipPath id="a"><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath>
+      <g clip-path="url(#a)"><path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b)"/></g>
+      <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+      <clipPath id="c"><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath>
+      <g clip-path="url(#c)"><path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d)"/></g>
+      <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/>
+      <clipPath id="e"><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/></clipPath>
+      <g clip-path="url(#e)"><path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f)"/></g>
+      <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)"><stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/><stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/></linearGradient><linearGradient id="d" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)"><stop offset="0" style="stop-color:#51e376;stop-opacity:1"/><stop offset="1" style="stop-color:#34c759;stop-opacity:1"/></linearGradient><linearGradient id="f" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)"><stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/><stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/></linearGradient></defs>
+    </svg><span class="dock__indicator"></span></div>
+<div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;">
+      <g id="Symbols_8_">
+        <g id="Graphics-_x2F_-App-Icons-_x2F_-Settings-">
+          <g id="Settings-Icon">
+            <linearGradient id="Background_13_" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#D3D7DD"></stop>
+              <stop offset="1" stop-color="#888C90"></stop>
+            </linearGradient>
+            <path id="Background_9_" d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_)"></path>
+            <circle id="Oval_3_" cx="50" cy="50" r="39" style="fill:#2e2e30"></circle>
+            <g id="Shape_1_">
+              <path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path>
+              <circle cx="50" cy="50" r="1.5" style="fill:none"></circle>
+              <linearGradient id="SVGID_1_" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#D9DADB"></stop>
+                <stop offset="1" stop-color="#7D8082"></stop>
+              </linearGradient>
+              <path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-.1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.1-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 .1.3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.3-3.5c.6 0 1.2.1 1.8.1.6 0 1.2-.1 1.8-.1l1.3 3.5c.6 0 1.1.2.8-.2l-.1-3.7c.6-.1 1.1-.3 1.7-.5l2.9 3.2c.7.8 1 0 .7-.3l-.9-3.6c.5-.2 1-.4 1.5-.7l2.4 2.9c.8 1 1.1.8.7-.4l-1.3-3.5c.5-.3 1-.5 1.4-.9l2.7 2.6c1 .9 1.2.7.6-.5l-1.7-3.3c.4-.4.9-.7 1.3-1.1l3 2.2c1.1.8 1.3.5.6-.5l-2.1-3.1c.4-.4.8-.8 1.2-1.3l3.2 1.9c1.1.7 1.4.4.5-.6l-2.4-2.8c.3-.4.7-.9 1-1.4l3.4 1.5c1.2.5 1.4.2.4-.7l-2.8-2.5c.3-.5.6-1 .8-1.5l3.6 1c1.3.4 1.4 0 .3-.7l-3-2.1c.2-.5.5-1 .7-1.6l3.7.6c1.3.2 1.4-.1.3-.7l-3.3-1.8c.2-.5.3-1.1.5-1.6l3.7.1c1.3 0 1.4-.3.2-.8l-3.3-1.8c.1-.6.2-1.1.3-1.7l3.7-.5c1.3-.1 1.3-.4.1-.8l-3.6-1c0-.6.1-1.1.1-1.7l3.7-.7c1.3-.2 1.3-.6 0-.8l-3.7-.5c0-.6-.1-1.1-.1-1.7l3.6-1.1c1.3-.4 1.2-.7-.1-.8l-3.7-.1c-.1-.6-.2-1.1-.3-1.7l3.4-1.6c1.2-.6 1.1-.9-.2-.8l-3.7.4c-.2-.6-.3-1.1-.5-1.7l3.2-1.9c1.1-.7 1-.1-.3-.7l-3.7.8c-.2-.5-.5-1-.7-1.6l2.9-2.3c1-.8.9-1.1-.4-.7l-3.5 1.2-.9-1.5 2.4-2.4c.9-.9.7-1.2-.4-.6l-3.4 1.6c-.3-.5-.7-.9-1.1-1.3l2.3-2.9c.8-1 .6-1.3-.5-.6l-3.1 2-1.2-1.2 1.9-3.2c.7-1.1.4-1.3-.6-.5l-2.9 2.4c-.4-.4-.9-.7-1.4-1.1l1.6-3.4c.6-1.2.3-1.4-.6-.4l-2.6 2.7-1.5-.9 1.2-3.5c.4-1.2.1-1.4-.7-.4l-2.3 3c-.5-.2-1-.5-1.6-.7l.7-3.7c.3-1.3-.1-1.4-.7-.3l-1.9 3.2c-.5-.2-1.1-.4-1.6-.5l.7-3.7c.2-1.3-.2-1.4-.8-.2l-1.3 3.5c-.6 0-1.2-.1-1.8-.1-.5 0-1.1.1-1.7.2l-1.3-3.5c-.5-.1-1.1-.2-1.6-.2l-.7 3.6c-.2 1.3.1 1.4.7.4l2-3.1c.5.3 1 .5 1.5.8l2.4-2.8c.4-.3.7-.1.7.4l-1.4 3.5c.5.3.9.7 1.4 1l2.7-2.5c.8.7.8.9.6.5l-1.8 3.3c.5.3.9.7 1.3 1.1l3-2.2c1 .8 1.1.5.6.6l-2.2 3.1c.4.4.7.9 1.1 1.3l2.7-2.4c.9.8.9 1 .5.6l-2.5 2.8c.3.4.7.9 1 1.4l3.4-1.4c1 .8 1 .9.4.7l-2.8 2.5c.3.5.5 1 .8 1.5l3.6-1c1.2.8 1.1 1 .3.7l-3.1 2.1c.2.5.4 1.1.6 1.6l3.7-.6c1.2.6 1.1.9.2.7l-3.3 1.7c.1.6.3 1.1.4 1.7l3.7-.1c1.2.5 1.2.8.1.8l-3.5 1.3c.1.6.1 1.1.2 1.7l3.7.3c1.3.1 1.4.5.1.8l-3.6.9v1.5l3.7.7c1.3.3 1.3.6 0 .8l-3.7.3c-.2.5-.3 1.1-.5 1.6l3.7-.6c1.3.2 1.4 0 .3-.7l-3.3-1.8c.2-.5.3-1.1.5-1.6l3.7.1c1.3 0 1.4-.3.2-.8l-3.4-1.6c.1-.6.2-1.1.3-1.7l3.7-.1c1.3-.1 1.2-.7-.1-.8l-3.6-1.1c0-.6-.1-1.1-.1-1.7l3.7-.7c1.3-.2 1.3-.6 0-.8l-3.7-.5c0-.6-.1-1.1-.1-1.7l3.7-.5z" style="fill:url(#SVGID_1_)"></path>
+</g>
+          </g>
+        </g>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+  </nav>
+  <script>
+    // Datos de ejemplo
+    const contactos = [
+      {id:1, nombre:'Dr. Juan Pérez', avatar:'JP', online:true, tipo:'individual', ultimoMsg:'Hola!', hora:'10:15'},
+      {id:2, nombre:'Dra. María García', avatar:'MG', online:false, tipo:'individual', ultimoMsg:'OK', hora:'9:30'},
+      {id:3, nombre:'Equipo Pachuca I', avatar:'EP', online:true, tipo:'grupo', ultimoMsg:'Reunión a las 3pm', hora:'8:00'},
+      {id:4, nombre:'Mtra. Ana Torres', avatar:'AT', online:true, tipo:'individual', ultimoMsg:'El taller fue exitoso', hora:'Ayer'},
+    ];
+
+    const canales = [
+      {id:1, nombre:'Anuncios Oficiales', tipo:'canal', ultimoMsg:'Nueva circular disponible', hora:'Hoy'},
+      {id:2, nombre:'Pachuca I', tipo:'regional', ultimoMsg:'Reporte semanal', hora:'Ayer'},
+      {id:3, nombre:'Psicólogos', tipo:'grupo', ultimoMsg:'Compartan materiales', hora:'Ayer'},
+    ];
+
+    const mensajes = {
+      1: [
+        {de:'ellos', texto:'Hola! ¿Cómo va la visita?', hora:'10:00'},
+        {de:'yo', texto:'Muy bien! Ya estamos en la segunda ronda', hora:'10:05'},
+        {de:'ellos', texto:'Excelente!', hora:'10:15'}
+      ],
+      2: [
+        {de:'ellos', texto:'¿Lista la documentación?', hora:'9:00'},
+        {de:'yo', texto:'Sí, ya la envié', hora:'9:15'},
+        {de:'ellos', texto:'OK', hora:'9:30'}
+      ],
+      3: [
+        {de:'ellos', texto:'Reunión a las 3pm', hora:'8:00'}
+      ],
+      4: [
+        {de:'ellos', texto:'El taller fue exitoso', hora:'Ayer'}
+      ],
+      101: [ // Anuncios Oficiales
+        {de:'ellos', texto:'Nueva circular disponible', hora:'Hoy'}
+      ],
+      102: [ // Pachuca I regional
+        {de:'ellos', texto:'Reporte semanal', hora:'Ayer'}
+      ],
+      103: [ // Psicólogos grupo
+        {de:'ellos', texto:'Compartan materiales', hora:'Ayer'}
+      ]
+    };
+
+    let currentTab = 'chats';
+    let selectedContactId = 1;
+    let selectedCanalId = null;
+
+    function logout(){syncStore.clear();window.location.href='../login.html';}
+    function navigateTo(p){window.location.href=p;}
+
+    function renderContacts(lista) {
+      const container = document.getElementById('list-container');
+      container.innerHTML = '';
+      lista.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'item' + (c.id === selectedContactId ? ' item--active' : '');
+        div.dataset.id = c.id;
+        div.innerHTML = `
+          <div class="avatar" style="background:linear-gradient(135deg,#5856D6,#AF52DE)">${c.avatar}${c.online?'<div class="online"></div>':''}</div>
+          <div class="info"><div class="name">${c.nombre}</div><div class="msg">${c.ultimoMsg}</div></div>
+          <div class="time">${c.hora}</div>
+        `;
+        div.addEventListener('click', () => selectContact(c.id));
+        container.appendChild(div);
+      });
+    }
+
+    function renderCanales() {
+      const container = document.getElementById('list-container');
+      container.innerHTML = '';
+      canales.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'item' + (c.id === selectedCanalId ? ' item--active' : '');
+        div.dataset.id = c.id;
+        div.innerHTML = `
+          <div class="avatar" style="background:linear-gradient(135deg,#FF9500,#FF9F0A)">${c.nombre.substring(0,2)}</div>
+          <div class="info"><div class="name">${c.nombre}</div><div class="msg">${c.ultimoMsg}</div></div>
+          <div class="time">${c.hora}</div>
+        `;
+        div.addEventListener('click', () => selectCanal(c.id));
+        container.appendChild(div);
+      });
+    }
+
+    function selectCanal(id) {
+      selectedCanalId = id;
+      const canal = canales.find(c => c.id === id);
+      if (!canal) return;
+
+      document.querySelectorAll('.item').forEach(x => x.classList.remove('item--active'));
+      const activeItem = document.querySelector(`.item[data-id="${id}"]`);
+      if (activeItem) activeItem.classList.add('item--active');
+
+      document.querySelector('.header-title').textContent = canal.nombre;
+      document.querySelector('.header-status').textContent = canal.tipo === 'canal' ? 'Canal oficial' : (canal.tipo === 'regional' ? 'chat grupal' : 'Grupo');
+      document.querySelector('.header .avatar').innerHTML = canal.nombre.substring(0,2) + '<div class="online"></div>';
+
+      renderMessages(id + 100); // offset para canales
+    }
+
+    function selectContact(id) {
+      selectedContactId = id;
+      const contacto = contactos.find(c => c.id === id);
+      if (!contacto) return;
+
+      document.querySelectorAll('.item').forEach(x => x.classList.remove('item--active'));
+      const activeItem = document.querySelector(`.item[data-id="${id}"]`);
+      if (activeItem) activeItem.classList.add('item--active');
+
+      document.querySelector('.header-title').textContent = contacto.nombre;
+      document.querySelector('.header-status').textContent = contacto.online ? 'En línea' : 'Desconectado';
+      document.querySelector('.header .avatar').innerHTML = contacto.avatar + (contacto.online?'<div class="online"></div>':'');
+
+      renderMessages(id);
+    }
+
+    function renderMessages(contactId) {
+      const messagesDiv = document.querySelector('.messages');
+      messagesDiv.innerHTML = '';
+      const msgs = mensajes[contactId] || [];
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + (m.de === 'yo' ? 'msg--sent' : 'msg--received');
+        div.textContent = m.texto;
+        messagesDiv.appendChild(div);
+      });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.querySelector('.input input');
+      const texto = input.value.trim();
+      if (!texto || !selectedContactId) return;
+
+      if (!mensajes[selectedContactId]) mensajes[selectedContactId] = [];
+
+      const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      mensajes[selectedContactId].push({de:'yo', texto, hora});
+
+      renderMessages(selectedContactId);
+      input.value = '';
+
+      // Simular respuesta después de 2 segundos
+      setTimeout(() => {
+        mensajes[selectedContactId].push({de:'ellos', texto:'Recibido', hora: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})});
+        renderMessages(selectedContactId);
+      }, 2000);
+    }
+
+    // Actualizar fecha del icono de agenda
+    function updateCalendarIcon() {
+      const now = new Date();
+      const dayNameOptions = { weekday: 'short' };
+      let dayName = now.toLocaleDateString('es-ES', dayNameOptions).toUpperCase();
+      dayName = dayName.replace('.', ''); 
+      const dayNumber = now.getDate();
+      
+      const dayNameEl = document.getElementById('day-name');
+      const dayNumberEl = document.getElementById('day-number');
+      if (dayNameEl) dayNameEl.textContent = dayName;
+      if (dayNumberEl) dayNumberEl.textContent = dayNumber;
+    }
+    
+    // Ejecutar al cargar
+    updateCalendarIcon();
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      if(syncStore.get('logged')!=='true'){window.location.href='../login.html';return;}
+
+      document.getElementById('user-avatar').textContent=(syncStore.get('usuario')||'U').split(' ').map(n=>n[0]).join('').substring(0,2);
+      document.getElementById('logout-btn').addEventListener('click',logout);
+      document.querySelectorAll('.dock__icon').forEach(i=>i.addEventListener('click',()=>navigateTo(i.dataset.href)));
+
+      // Tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab--active'));
+          tab.classList.add('tab--active');
+          currentTab = tab.dataset.tab;
+          if (currentTab === 'chats') {
+            renderContacts(contactos);
+            if (contactos.length > 0) selectContact(contactos[0].id);
+          } else {
+            renderCanales();
+          }
+        });
+      });
+
+      // Búsqueda
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        if (currentTab === 'chats') {
+          const filtrados = contactos.filter(c => c.nombre.toLowerCase().includes(q));
+          renderContacts(filtrados);
+        } else {
+          const filtrados = canales.filter(c => c.nombre.toLowerCase().includes(q));
+          renderCanalesFiltrados(filtrados);
+        }
+      });
+
+      function renderCanalesFiltrados(lista) {
+        const container = document.getElementById('list-container');
+        container.innerHTML = '';
+        lista.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'item' + (c.id === selectedCanalId ? ' item--active' : '');
+          div.dataset.id = c.id;
+          div.innerHTML = `
+            <div class="avatar" style="background:linear-gradient(135deg,#FF9500,#FF9F0A)">${c.nombre.substring(0,2)}</div>
+            <div class="info"><div class="name">${c.nombre}</div><div class="msg">${c.ultimoMsg}</div></div>
+            <div class="time">${c.hora}</div>
+          `;
+          div.addEventListener('click', () => selectCanal(c.id));
+          container.appendChild(div);
+        });
+      }
+
+      // Enviar mensaje
+      document.querySelector('.input button').addEventListener('click', sendMessage);
+      document.querySelector('.input input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      // Reloj
+      setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),1000);
+
+      // Inicializar
+      renderContacts(contactos);
+      selectContact(selectedContactId);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Generated / temporary files
+server/temp/
+*.tmp
+*.log
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Private keys / certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Internal AI/tool state
+.atl/
+
+# Backups
+*.backup
+*.bak
+
+# Sensitive/private source material
+Multimedia/sello-y-firma.png
+"Oficios de comisión IHE.docx"
+src/pruebapdf/Multimedia/sello\ y\ firma.png
+
+# Archivos de pruebas institucionales
+/src/pruebapdf/
+
+/Oficios de comisión IHE.docx

@@ -1,0 +1,157 @@
+// ===========================================
+// Dock - macOS Style (Enhanced)
+// ===========================================
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'base/animations';
+
+.dock {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  @include glass-effect;
+  border-radius: $radius-large;
+  padding: $dock-spacing 12px;
+  display: flex;
+  gap: 4px;
+  z-index: 1000;
+
+  // Animation on load
+  animation: slide-up 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  &__separator {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 8px;
+  }
+
+  // Dock icon
+  &__icon {
+    width: $dock-icon-size;
+    height: $dock-icon-size;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: $radius-app-icon;
+    position: relative;
+    @include transition-bounce;
+
+    // Hover magnification effect
+    &:hover {
+      transform: scale(1.4) translateY(-12px);
+      animation: none;
+    }
+
+    // Neighbor icons scale
+    &:hover + .dock__icon,
+    &:has(+ .dock__icon:hover) {
+      transform: scale(1.2) translateY(-6px);
+    }
+
+    // SVG styling
+    svg {
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+    }
+
+    // Tooltip label
+    .dock__label {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: $font-caption-1;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      margin-bottom: 8px;
+
+      // Arrow
+      &::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.75);
+      }
+    }
+
+    &:hover .dock__label {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  // Bounce animation class (applied via JS)
+  &__icon--bounce {
+    animation: dock-bounce 0.4s ease;
+  }
+
+  // App indicator (dot below icon)
+  &__indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: white;
+    margin-top: 3px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &__icon--active .dock__indicator {
+    opacity: 1;
+  }
+
+  // Active state glow
+  &__icon--active {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: $radius-app-icon + 4px;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// Backdrop blur optimization
+@supports (backdrop-filter: blur(20px)) {
+  .dock {
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+// Tooltip positioning adjustments
+.dock__icon[data-app]::before {
+  // No pseudo-element, using .dock__label class instead
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .dock {
+    animation: none;
+  }
+  
+  .dock__icon {
+    transition: none;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}

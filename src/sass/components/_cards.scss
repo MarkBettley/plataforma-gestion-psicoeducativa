@@ -1,0 +1,28 @@
+// ===========================================
+// Cards
+// ===========================================
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+.card {
+  @include card;
+
+  &--glass {
+    @include glass-effect;
+    background: $glass-light;
+  }
+
+  &--bordered {
+    border: 1px solid $gray-4;
+  }
+
+  &--interactive {
+    cursor: pointer;
+    @include transition-smooth;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-large;
+    }
+  }
+}

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Plataforma Psicoeducativa</title>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <style>
+    /* Login style override - the main.css has base styles */
+    .login {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: url('/src/assets/wallpapers/sin ajolote.jpeg') center/cover no-repeat, #1a1a2e;
+      background-blend-mode: overlay;
+    }
+    .login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      z-index: 0;
+    }
+    .login__container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .login__avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #5856D6;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease-out;
+    }
+    .login__avatar:hover {
+      transform: scale(1.02);
+    }
+    .login__username {
+      color: white;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .login__role {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 15px;
+    }
+    .login__email {
+      width: 280px;
+      padding: 14px 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: white;
+      font-size: 17px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      outline: none;
+      transition: all 0.2s ease-out;
+    }
+    .login__email::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .login__email:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .login__password-container {
+      margin-top: 12px;
+    }
+    .login__password {
+      width: 280px;
+      padding: 14px 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: white;
+      font-size: 17px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      outline: none;
+      transition: all 0.2s ease-out;
+    }
+    .login__password::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .login__password:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .login__error {
+      animation: shake 0.5s ease-in-out;
+    }
+    .login__error .login__password {
+      border-color: #FF3B30;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+      20%, 40%, 60%, 80% { transform: translateX(6px); }
+    }
+    .login__forgot {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .login__forgot:hover {
+      color: white;
+      text-decoration: underline;
+    }
+    .login__submit {
+      margin-top: 16px;
+      width: 280px;
+      padding: 14px;
+      border-radius: 22px;
+      background: #007AFF;
+      color: white;
+      font-size: 17px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease-out;
+    }
+    .login__submit:hover {
+      background: #0066e6;
+    }
+    .login__submit:active {
+      transform: scale(0.98);
+    }
+    .login__submit:disabled {
+      background: #8E8E93;
+      cursor: not-allowed;
+    }
+    .login--success {
+      animation: login-success 0.5s ease-out forwards;
+    }
+    @keyframes login-success {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.1); }
+    }
+    /* User switcher */
+    .login__user-switcher {
+      position: absolute;
+      bottom: 60px;
+      display: flex;
+      gap: 12px;
+    }
+    .login__user-switcher-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .login__user-switcher-btn:hover,
+    .login__user-switcher-btn--active {
+      opacity: 1;
+    }
+    .login__user-switcher-btn img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #5856D6;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .login__user-switcher-btn span {
+      color: white;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login" id="login-screen">
+    <div class="login__container">
+      <!-- Avatar -->
+      <div class="login__avatar" id="avatar-img">MG</div>
+      
+      <!-- Nombre y Rol -->
+      <div class="login__username" id="username-display">Dra. María García</div>
+      <div class="login__role" id="user-role">Psicólogo</div>
+      
+      <!-- Campo Email -->
+      <div class="login__email-container">
+        <input 
+          type="email" 
+          class="login__email" 
+          id="email-input"
+          placeholder="Email"
+          autocomplete="off"
+        >
+      </div>
+      
+      <!-- Campo Contraseña -->
+      <div class="login__password-container">
+        <input 
+          type="password" 
+          class="login__password" 
+          id="password-input"
+          placeholder="Contraseña"
+          autocomplete="off"
+        >
+      </div>
+      
+      <!-- Olvidé mi contraseña -->
+      <div class="login__forgot" id="forgot-btn">¿Olvidaste tu contraseña?</div>
+      
+      <!-- Botón Entrar -->
+      <button class="login__submit" id="login-btn">Entrar</button>
+    </div>
+
+    
+  </div>
+
+  <script src="/src/js/data/db.js"></script>
+  <script src="/src/js/data/sync-store.js"></script>
+  <script>
+    // Debug: verificar que DB esté disponible
+    console.log('DB loaded:', typeof DB !== 'undefined');
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Si ya está logueado, ir directo al dashboard
+      if (syncStore.get('logged') === 'true') {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      
+      const emailInput = document.getElementById('email-input');
+      const passwordInput = document.getElementById('password-input');
+      const loginBtn = document.getElementById('login-btn');
+      const container = document.querySelector('.login__container');
+      const avatarImg = document.getElementById('avatar-img');
+      const usernameDisplay = document.getElementById('username-display');
+      const userRole = document.getElementById('user-role');
+      const forgotBtn = document.getElementById('forgot-btn');
+      
+      console.log('Elements found:', { emailInput, passwordInput, loginBtn, container });
+      
+      // Ocultar "Olvidé mi contraseña" por defecto - solo visible para admin/owner
+      // El admin/owner se define en syncStore cuando está logueado
+      const currentUserRol = syncStore.get('rol');
+      if (currentUserRol !== 'admin' && currentUserRol !== 'owner') {
+        forgotBtn.style.display = 'none';
+      } else {
+        // Mostrar para admin/owner
+        forgotBtn.style.display = 'block';
+      }
+
+      // Forgot password - solo para admin/owner
+      forgotBtn.addEventListener('click', () => {
+        const rol = syncStore.get('rol');
+        if (rol === 'admin' || rol === 'owner') {
+          // Mostrar modal de recuperación (por implementar)
+          alert('Funcionalidad de recuperación de contraseña para administradores.');
+        } else {
+          alert('Debes estar logueado como admin para recuperar contraseñas');
+        }
+      });
+
+      // Evento click en botón
+      loginBtn.addEventListener('click', handleLogin);
+      
+      // Evento Enter en inputs
+      emailInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') passwordInput.focus();
+      });
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+      });
+      
+      function showError(message) {
+        // Crear elemento de error temporal
+        const existingError = document.querySelector('.login__error-message');
+        if (existingError) existingError.remove();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'login__error-message';
+        errorDiv.style.cssText = 'color: #FF3B30; font-size: 14px; margin-top: 8px;';
+        errorDiv.textContent = message;
+        container.appendChild(errorDiv);
+        
+        // Shake animation
+        container.classList.add('login__error');
+        setTimeout(() => {
+          container.classList.remove('login__error');
+        }, 500);
+        
+        // Remover error después de 3 segundos
+        setTimeout(() => errorDiv.remove(), 3000);
+      }
+      
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+      
+      function handleLogin() {
+        console.log('handleLogin called');
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        // Validar campos vacíos
+        if (!email || !password) {
+          showError('Por favor completa todos los campos');
+          return;
+        }
+        
+        // Validar formato email
+        if (!validateEmail(email)) {
+          showError('Por favor ingresa un email válido');
+          return;
+        }
+        
+        // Buscar usuario en DB
+        const usuario = DB.usuarios.find(u => u.email === email);
+        
+        if (!usuario) {
+          showError('Usuario no encontrado');
+          return;
+        }
+        
+        // Validar contraseña
+        if (usuario.password !== password) {
+          showError('Contraseña incorrecta');
+          return;
+        }
+        
+        // Login exitoso - guardar sesión
+        syncStore.set('usuario', usuario.nombre);
+        syncStore.set('avatar', usuario.avatar);
+        syncStore.set('rol', usuario.rol);
+        syncStore.set('email', usuario.email);
+        syncStore.set('id', usuario.id);
+        syncStore.set('logged', 'true');
+
+        // Guardar región del usuario
+        if (usuario.region) {
+          syncStore.set('region', usuario.region);
+        }
+        
+        // Actualizar UI del login con los datos del usuario
+        avatarImg.textContent = usuario.avatar;
+        usernameDisplay.textContent = usuario.nombre;
+        userRole.textContent = usuario.rol === 'admin' ? 'Administrador' : 
+                               usuario.rol === 'owner' ? 'Propietario' :
+                               usuario.rol === 'psicologo' ? 'Psicólogo' : usuario.rol;
+        
+        // Animación success y redirigir
+        container.classList.add('login--success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 500);
+      }
+
+      // Focus email input inicialmente
+      emailInput.focus();
+    });
+  </script>
+</body>
+</html>

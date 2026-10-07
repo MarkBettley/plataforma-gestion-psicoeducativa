@@ -1,0 +1,242 @@
+// ===========================================
+// Animations - Plataforma Psicoeducativa
+// ===========================================
+
+// ===========================================
+// Basic Animations
+// ===========================================
+
+// Shake animation for login error
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+// Fade in + zoom for successful login
+@keyframes login-success {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+
+// Dock bounce when opening app
+@keyframes dock-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-20px); }
+  50% { transform: translateY(-8px); }
+  75% { transform: translateY(-12px); }
+}
+
+// Pulse animation
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// Fade in
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// Slide up
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Slide down
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ===========================================
+// New Advanced Animations
+// ===========================================
+
+// Scale in (for modals, cards)
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Spin (for loading)
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Blink (for cursors, indicators)
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
+// Float (for floating elements)
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+// Skew shake (for errors)
+@keyframes skew-shake {
+  0%, 100% { transform: skewX(0deg); }
+  25% { transform: skewX(-3deg); }
+  75% { transform: skewX(3deg); }
+}
+
+// Ripple effect
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+// Glow pulse (for active items)
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 122, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 122, 255, 0.6);
+  }
+}
+
+// Slide in from right
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Fade in up
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Bounce in
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ===========================================
+// Utility Classes
+// ===========================================
+
+// Animation durations
+.anim-fast { animation-duration: 0.15s; }
+.anim-normal { animation-duration: 0.3s; }
+.anim-slow { animation-duration: 0.5s; }
+
+// Animation timing functions
+.ease-smooth { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.ease-bounce { transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+.ease-in { transition-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+
+// Transition helpers
+.transition-base {
+  transition: all 0.2s ease;
+}
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-bounce {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+// Animation application classes
+.animate-fade-in {
+  animation: fade-in 0.3s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+// Staggered animations (for lists)
+// Add .stagger-delay-1, .stagger-delay-2, etc. for sequencing
+.stagger-delay-1 { animation-delay: 0.05s; }
+.stagger-delay-2 { animation-delay: 0.1s; }
+.stagger-delay-3 { animation-delay: 0.15s; }
+.stagger-delay-4 { animation-delay: 0.2s; }
+.stagger-delay-5 { animation-delay: 0.25s; }
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

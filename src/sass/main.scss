@@ -1,0 +1,42 @@
+// ===========================================
+// Main SCSS - Plataforma Psicoeducativa
+// ===========================================
+
+// Abstracts
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'abstracts/functions';
+
+// Base
+@import 'base/reset';
+@import 'base/typography';
+@import 'base/animations';
+
+// Components
+@import 'components/buttons';
+@import 'components/cards';
+@import 'components/dock';
+@import 'components/menu-bar';
+@import 'components/app-icons';
+@import 'components/forms';
+@import 'components/modals';
+@import 'components/navigation';
+
+// Layouts
+@import 'layouts/macos-desktop';
+@import 'layouts/ios-app';
+@import 'layouts/grid';
+
+// Pages
+@import 'pages/login';
+@import 'pages/dashboard';
+@import 'pages/psicologos';
+@import 'pages/escuelas';
+@import 'pages/agenda';
+@import 'pages/mapa';
+@import 'pages/archivos';
+@import 'pages/chat';
+@import 'pages/capacitacion';
+@import 'pages/tienda';
+@import 'pages/perfil';
+@import 'pages/ajustes';

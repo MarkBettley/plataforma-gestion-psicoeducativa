@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archivos - Plataforma Psicoeducativa</title>
+  <script src="/src/js/data/sync-store.js"></script>
+  <script src="/src/js/data/db.js"></script>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <style>
+    .arch { display: flex; height: 100vh; padding-top: 28px; background: #F2F2F7; overflow: hidden; }
+    .sidebar { width: 220px; background: rgba(255,255,255,0.9); border-right: 1px solid #E5E5EA; padding: 16px; overflow-y: auto; }
+    .storage { background: #F2F2F7; border-radius: 12px; padding: 12px; margin-bottom: 16px; }
+    .storage-label { font-size: 11px; color: #8E8E93; }
+    .storage-bar { height: 4px; background: #E5E5EA; border-radius: 2px; margin-top: 8px; }
+    .storage-fill { height: 100%; width: 35%; background: #007AFF; border-radius: 2px; }
+    .storage-text { font-size: 11px; color: #8E8E93; margin-top: 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 4px; transition: background 0.2s; }
+    .nav-item:hover { background: rgba(0,0,0,0.05); }
+    .nav-item--active { background: rgba(0,122,255,0.1); color: #007AFF; font-weight: 500; }
+    .folders { border-top: 1px solid #E5E5EA; padding-top: 16px; margin-top: 16px; }
+    .folder { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+    .folder:hover { background: rgba(0,0,0,0.05); }
+    .folder--active { background: rgba(0,122,255,0.1); color: #007AFF; }
+    .folder-count { color: #8E8E93; font-size: 12px; margin-left: auto; }
+    .folder-children { margin-left: 16px; }
+    .main { flex: 1; padding: 16px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .title { font-size: 24px; font-weight: 600; }
+    .new-btn { padding: 8px 16px; background: #007AFF; color: white; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; position: relative; }
+    .new-btn:hover { background: #0051D5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+    .item { background: white; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .item:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .item-icon { font-size: 36px; margin-bottom: 8px; }
+    .item-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; word-break: break-word; }
+    .item-meta { font-size: 11px; color: #8E8E93; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 14px; }
+    .breadcrumb-item { color: #007AFF; cursor: pointer; }
+    .breadcrumb-item:hover { text-decoration: underline; }
+.breadcrumb-separator { color: #8E8E93; }
+    
+    /* Menu bar dropdowns */
+    .menu-bar__dropdown { position: relative; display: inline-block; }
+    .menu-bar__menu { display: none; position: absolute; top: 22px; left: 0; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; padding: 4px 0; z-index: 1001; }
+    .menu-bar__menu--open { display: block !important; }
+    .menu-bar__menu-item { padding: 6px 12px; cursor: pointer; font-size: 13px; }
+    .menu-bar__menu-item:hover { background: rgba(0,0,0,0.08); }
+    .menu-bar__menu-separator { height: 1px; background: #E5E5EA; margin: 4px 0; }
+    .menu-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 28px; }
+    .menu-bar__left { display: flex; align-items: center; gap: 4px; }
+    .menu-bar__dropdown > a { position: relative; z-index: 1002; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; }
+    .modal-overlay.show { display: flex; }
+     .modal { background: white; border-radius: 12px; padding: 24px; width: 550px; max-width: 90vw; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+     .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+     .modal-field { margin-bottom: 16px; }
+     .modal-label { font-size: 13px; color: #8E8E93; margin-bottom: 6px; display: block; }
+     .modal-select, .modal-input { width: 100%; padding: 8px 12px; border: 1px solid #E5E5EA; border-radius: 8px; font-size: 14px; background: white; }
+     .modal-input-file { font-size: 14px; }
+     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+     .modal-btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; }
+     .modal-btn--primary { background: #007AFF; color: white; }
+     .modal-btn--primary:hover { background: #0051D5; }
+     .modal-btn--secondary { background: #E5E5EA; color: #000; }
+     .modal-btn--secondary:hover { background: #D1D1D6; }
+     .folder-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; border-radius: 6px; font-size: 13px; }
+     .folder-item:hover { background: rgba(0,0,0,0.05); }
+     .folder-item--active { background: rgba(0,122,255,0.1); color: #007AFF; }
+     .escuelas-submenu { margin-left: 16px; display: none; }
+     .escuelas-submenu.show { display: block; }
+     .folder-with-children { cursor: pointer; }
+     
+     /* File Preview Modal */
+     #preview-modal .modal { width: 480px; }
+     .preview-icon { font-size: 80px; text-align: center; margin-bottom: 16px; }
+     .preview-field { margin-bottom: 12px; }
+     .preview-label { font-size: 12px; color: #8E8E93; margin-bottom: 4px; }
+     .preview-value { font-size: 14px; color: #1C1C1E; }
+     .preview-actions { display: flex; gap: 8px; margin-top: 20px; }
+     .preview-btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+     .preview-btn--print { background: #34C759; color: white; }
+     .preview-btn--print:hover { background: #28A745; }
+     .preview-btn--download { background: #007AFF; color: white; }
+     .preview-btn--download:hover { background: #0051D5; }
+     .preview-btn--close { background: #E5E5EA; color: #000; }
+     .preview-btn--close:hover { background: #D1D1D6; }
+     
+     /* Hierarchical select */
+.modal-select optgroup { font-weight: 600; color: #1C1C1E; }
+      .modal-select option { padding-left: 16px; }
+      
+      /* File list with per-file type selector */
+      .file-list { margin-top: 12px; border: 1px solid #E5E5EA; border-radius: 8px; max-height: 200px; overflow-y: auto; }
+      .file-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #E5E5EA; }
+      .file-list-item:last-child { border-bottom: none; }
+      .file-list-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .file-list-select { width: 160px; padding: 4px 8px; font-size: 12px; border: 1px solid #E5E5EA; border-radius: 6px; background: white; }
+      .file-list-remove { background: none; border: none; color: #FF3B30; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+      .file-list-remove:hover { color: #D32F2F; }
+      .file-list-empty { padding: 20px; text-align: center; color: #8E8E93; font-size: 13px; }
+    
+    /* Filtros Modal */
+    #filtros-modal .modal { width: 680px; }
+    .filtros-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .filtros-full { grid-column: 1 / -1; }
+    .filtros-row { display: flex; gap: 12px; }
+    .filtros-row .modal-field { flex: 1; }
+    .filtros-checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .filtros-checkbox-group label { font-size: 13px; padding: 4px 0; cursor: pointer; }
+    .filtros-checkbox-group label:hover { color: #007AFF; }
+    .filtros-resultados { background: #F2F2F7; border-radius: 8px; padding: 12px; margin-top: 16px; font-size: 14px; text-align: center; }
+    .filtros-resultados strong { color: #007AFF; }
+    
+    /* ========== VIEW MODES ========== */
+    .view-xl .item { padding: 20px; }
+    .view-xl .item-icon { font-size: 72px; }
+    .view-xl .item-name { font-size: 14px; }
+    
+    .view-lg .item { padding: 16px; }
+    .view-lg .item-icon { font-size: 48px; }
+    
+    .view-md .item { padding: 16px; }
+    .view-md .item-icon { font-size: 36px; }
+    
+    .view-sm .item { padding: 10px; }
+    .view-sm .item-icon { font-size: 24px; }
+    .view-sm .item-name { font-size: 11px; }
+    
+    /* Lista view */
+    .view-list { display: flex; flex-direction: column; gap: 2px; }
+    .view-list .item { display: flex; align-items: center; padding: 8px 12px; border-radius: 8px; text-align: left; gap: 12px; }
+    .view-list .item-icon { font-size: 18px; margin: 0; }
+    .view-list .item-name { flex: 1; font-size: 13px; }
+    .view-list .item-meta { display: block; font-size: 12px; }
+    .view-list .item-type-col { width: 100px; font-size: 12px; color: #8E8E93; }
+    .view-list .item-date-col { width: 80px; font-size: 12px; color: #8E8E93; }
+    .view-list .item-size-col { width: 80px; font-size: 12px; color: #8E8E93; text-align: right; }
+    
+    /* Detalles view */
+    .view-details { display: flex; flex-direction: column; gap: 2px; }
+    .view-details .item { display: flex; align-items: center; padding: 8px 12px; border-radius: 8px; text-align: left; gap: 12px; }
+    .view-details .item-icon { font-size: 18px; margin: 0; }
+    .view-details .item-name { flex: 1; font-size: 13px; }
+    .view-details .item-meta { display: none; }
+    .view-details .item-type-col { width: 100px; font-size: 12px; color: #8E8E93; }
+    .view-details .item-date-col { width: 90px; font-size: 12px; color: #8E8E93; }
+    .view-details .item-size-col { width: 80px; font-size: 12px; color: #8E8E93; text-align: right; }
+    .view-details .item-author-col { width: 120px; font-size: 12px; color: #8E8E93; }
+    .view-details .item-school-col { flex: 1; font-size: 12px; color: #8E8E93; }
+    
+    /* Mosaicos view */
+    .view-mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .view-mosaic .item { padding: 20px; }
+    .view-mosaic .item-icon { font-size: 64px; }
+    .view-mosaic .item-name { font-size: 14px; }
+    
+    /* Contenido view */
+    .view-content { display: flex; flex-direction: column; gap: 16px; }
+    .view-content .folder-group { background: white; border-radius: 12px; padding: 16px; }
+    .view-content .folder-group-title { font-size: 14px; font-weight: 600; color: #1C1C1E; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #E5E5EA; }
+    .view-content .folder-items { display: flex; flex-wrap: wrap; gap: 8px; }
+    .view-content .item { background: #F2F2F7; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+    .view-content .item-icon { font-size: 16px; margin: 0; }
+    .view-content .item-name { font-size: 13px; }
+    
+    /* Panel de detalles view */
+    .main-with-panel { display: flex; gap: 16px; }
+    .main-with-panel .grid-area { flex: 1; }
+    .main-with-panel .details-panel { width: 280px; background: white; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .main-with-panel .details-panel h3 { font-size: 14px; font-weight: 600; margin: 0; }
+    .main-with-panel .details-section { border-bottom: 1px solid #E5E5EA; padding-bottom: 12px; }
+    .main-with-panel .details-section:last-child { border: none; }
+    .main-with-panel .details-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .main-with-panel .details-label { color: #8E8E93; }
+    .main-with-panel .details-value { color: #1C1C1E; font-weight: 500; }
+    .main-with-panel .details-empty { color: #8E8E93; font-size: 13px; text-align: center; padding: 20px; }
+    .main-with-panel .details-preview-icon { font-size: 64px; text-align: center; margin-bottom: 12px; }
+    
+    /* Panel de vista previa view */
+    .main-with-preview { display: flex; gap: 16px; }
+    .main-with-preview .grid-area { flex: 1; }
+    .main-with-preview .preview-panel { width: 300px; background: white; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+    .main-with-preview .preview-panel h3 { font-size: 14px; font-weight: 600; margin: 0 0 16px 0; }
+    .main-with-preview .preview-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .main-with-preview .preview-file-icon { font-size: 80px; margin-bottom: 16px; }
+    .main-with-preview .preview-file-name { font-size: 14px; font-weight: 500; margin-bottom: 8px; text-align: center; word-break: break-word; }
+    .main-with-preview .preview-file-meta { font-size: 12px; color: #8E8E93; margin-bottom: 20px; text-align: center; }
+    .main-with-preview .preview-actions { display: flex; gap: 8px; width: 100%; }
+    .main-with-preview .preview-actions button { flex: 1; padding: 8px; border-radius: 6px; border: none; font-size: 12px; cursor: pointer; }
+    .main-with-preview .preview-empty { color: #8E8E93; font-size: 13px; text-align: center; padding: 40px 20px; }
+    .main-with-preview .preview-actions .btn-print { background: #34C759; color: white; }
+    .main-with-preview .preview-actions .btn-download { background: #007AFF; color: white; }
+    .main-with-preview .preview-actions .btn-preview { background: #5856D6; color: white; }
+    </style>
+</head>
+<body>
+  <header class="menu-bar">
+    <div class="menu-bar__left">
+      <span class="menu-bar__logo" style="cursor:pointer" onclick="navigateTo('/src/html/dashboard.html')" title="SEP">SEP</span>
+      
+      <!-- Archivo dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-archivo" style="cursor:pointer;">Archivo</a>
+        <div class="menu-bar__menu" id="dropdown-archivo">
+          <div class="menu-bar__menu-item" onclick="openFiltrosModal();closeMenus()">Nueva búsqueda</div>
+          <div class="menu-bar__dropdown" style="display:block;">
+            <div class="menu-bar__menu-item" onclick="toggleSubmenu('ordenar-submenu', event)">Ordenar ▸</div>
+            <div class="menu-bar__menu" id="ordenar-submenu" style="display:none; position:absolute; left:100%; top:0;">
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('nombre-asc');closeMenus()">Nombre A-Z</div>
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('nombre-desc');closeMenus()">Nombre Z-A</div>
+              <div class="menu-bar__menu-separator"></div>
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('fecha-reciente');closeMenus()">Fecha reciente</div>
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('fecha-antigua');closeMenus()">Fecha antigua</div>
+              <div class="menu-bar__menu-separator"></div>
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('tamano-menor');closeMenus()">Tamaño menor</div>
+              <div class="menu-bar__menu-item" onclick="ordenarArchivos('tamano-mayor');closeMenus()">Tamaño mayor</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Ver dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-ver" style="cursor:pointer;">Ver</a>
+        <div class="menu-bar__menu" id="dropdown-ver">
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-xl');closeMenus()">Iconos muy grandes</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-lg');closeMenus()">Iconos grandes</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-md');closeMenus()">Iconos medianos</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-sm');closeMenus()">Iconos pequeños</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-list');closeMenus()">Lista</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-details');closeMenus()">Detalles</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-mosaic');closeMenus()">Mosaicos</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-content');closeMenus()">Contenido</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-panel-detalles');closeMenus()">Panel de detalles</div>
+          <div class="menu-bar__menu-item" onclick="setViewMode('view-panel-vista');closeMenus()">Panel de vista previa</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="zoomIn();closeMenus()">Zoom +</div>
+          <div class="menu-bar__menu-item" onclick="zoomOut();closeMenus()">Zoom -</div>
+          <div class="menu-bar__menu-item" onclick="zoomReset();closeMenus()">Tamaño Original</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar__right">
+      <button id="logout-btn">⬋</button>
+      <div id="user-avatar">MG</div>
+      <div id="clock">10:30</div>
+    </div>
+  </header>
+  <main class="arch" style="padding-bottom: 80px;">
+    <aside class="sidebar">
+      <div class="storage">
+        <div class="storage-label">Almacenamiento</div>
+        <div class="storage-bar"><div class="storage-fill"></div></div>
+        <div class="storage-text">3.5 GB de 10 GB</div>
+      </div>
+      <div class="nav-item nav-item--active" data-nav="mi-unidad">Mi Unidad</div>
+      <div class="nav-item" data-nav="recientes">Recientes</div>
+      <div class="nav-item" data-nav="compartidos">Compartidos</div>
+        <div class="folders">
+          <div id="sidebar-tree"></div>
+        </div>
+    </aside>
+    <section class="main" id="main-content">
+      <div class="header">
+        <div>
+          <div class="breadcrumb" id="breadcrumb">
+            <span class="breadcrumb-item" data-nav="mi-unidad">Mi Unidad</span>
+          </div>
+          <h1 class="title" id="view-title">Mi Unidad</h1>
+        </div>
+        <div style="position: relative;">
+          <button class="new-btn" id="new-btn">+ Nuevo</button>
+        </div>
+       </div>
+       <div class="grid" id="grid"></div>
+     </section>
+   </main>
+
+    <!-- Modal Subir Archivo -->
+    <div class="modal-overlay" id="upload-modal">
+      <div class="modal">
+        <div class="modal-title">Subir Archivo</div>
+        <div class="modal-field">
+          <label class="modal-label">1. Navega a la carpeta destino</label>
+          <div id="upload-breadcrumb" style="margin-bottom:8px;font-size:13px;color:#007AFF;">
+            <span>Regiones</span>
+          </div>
+          <div id="upload-content" style="min-height:120px;border:1px solid #E5E5EA;border-radius:8px;padding:8px;max-height:200px;overflow-y:auto;">
+            <div class="file-list-empty">Cargando...</div>
+          </div>
+          <div id="upload-status-indicator" style="font-size:12px;color:#8E8E93;margin-top:4px;">
+            Navega hasta una fecha de visita
+          </div>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">2. Seleccionar archivo(s)</label>
+          <input type="file" class="modal-input-file" id="file-input" multiple style="width:100%;">
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">3. Tipo de documento (por archivo)</label>
+          <div id="file-type-list" class="file-list">
+            <div class="file-list-empty">Selecciona archivos arriba</div>
+          </div>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">4. Psicólogos involucrados</label>
+          <div id="psicologos-checkboxes"></div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn--secondary" id="upload-cancel">Cancelar</button>
+          <button class="modal-btn modal-btn--primary" id="upload-confirm">Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Vista Previa de Archivo -->
+    <div class="modal-overlay" id="preview-modal">
+      <div class="modal">
+        <div class="modal-title">Vista Previa</div>
+        <div class="preview-icon" id="preview-icon">📄</div>
+        <div class="preview-field">
+          <div class="preview-label">Nombre del archivo</div>
+          <div class="preview-value" id="preview-name"></div>
+        </div>
+        <div class="preview-field">
+          <div class="preview-label">Tipo</div>
+          <div class="preview-value" id="preview-type"></div>
+        </div>
+        <div class="preview-field">
+          <div class="preview-label">Fecha de subido</div>
+          <div class="preview-value" id="preview-date"></div>
+        </div>
+        <div class="preview-field">
+          <div class="preview-label">Tamaño</div>
+          <div class="preview-value" id="preview-size"></div>
+        </div>
+        <div class="preview-actions">
+          <button class="preview-btn preview-btn--print" id="preview-print">🖨️ Imprimir</button>
+          <button class="preview-btn preview-btn--download" id="preview-download">⬇️ Descargar</button>
+          <button class="preview-btn preview-btn--close" id="preview-close">✕ Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+<!-- Modal Filtros - Mismos campos que +Nuevo -->
+    <div class="modal-overlay" id="filtros-modal">
+      <div class="modal">
+        <div class="modal-title">Filtros de búsqueda</div>
+        
+        <!-- 1. Número de oficio -->
+        <div class="modal-field">
+          <label class="modal-label">Número de oficio</label>
+          <input type="text" class="modal-input" id="filtro-num-oficio" placeholder="Ej: 001/2026">
+        </div>
+        
+        <!-- 2. Município -->
+        <div class="modal-field">
+          <label class="modal-label">Município</label>
+          <select class="modal-select" id="filtro-municipio">
+            <option value="">Todos</option>
+            <option value="Tepic">Tepic</option>
+            <option value="Santiago Ixcuintla">Santiago Ixcuintla</option>
+            <option value="Xalisco">Xalisco</option>
+            <option value="Compostela">Compostela</option>
+            <option value="San Blas">San Blas</option>
+            <option value="Ruíz">Ruíz</option>
+            <option value="Rosamorada">Rosamorada</option>
+            <option value="Tuxpan">Tuxpan</option>
+          </select>
+        </div>
+        
+        <!-- 3. Escuela (nombre) -->
+        <div class="modal-field">
+          <label class="modal-label">Escuela</label>
+          <select class="modal-select" id="filtro-escuela">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        
+        <!-- 4. CCT (código) -->
+        <div class="modal-field">
+          <label class="modal-label">CCT</label>
+          <input type="text" class="modal-input" id="filtro-cct" placeholder="Ej: 13DPR0001A">
+        </div>
+        
+        <!-- 5. Fecha de intervención -->
+        <div class="modal-field">
+          <label class="modal-label">Fecha de intervención</label>
+          <input type="date" class="modal-input" id="filtro-fecha">
+        </div>
+        
+        <!-- 6. Tipo de documento -->
+        <div class="modal-field">
+          <label class="modal-label">Tipo de documento</label>
+          <select class="modal-select" id="filtro-tipo-doc">
+            <option value="">Todos</option>
+            <option value="oficio-solicitud">Oficio solicitud</option>
+            <option value="oficio-comision">Oficio comisión</option>
+            <option value="oficio-contestacion">Oficio contestación</option>
+            <option value="acta">Acta</option>
+            <option value="informe">Informe</option>
+            <option value="evidencia-fotografica">Evidencia fotográfica</option>
+            <option value="evidencia-video">Evidencia en video</option>
+            <option value="figuras-fortalecia">Figuras fortalecias</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+        
+        <!-- 7. Psicólogos involucrados -->
+        <div class="modal-field">
+          <label class="modal-label">Psicólogos involucrados</label>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <label><input type="checkbox" name="filtro-psicologo" value="Dr. Juan Pérez"> Dr. Juan Pérez</label>
+            <label><input type="checkbox" name="filtro-psicologo" value="Dra. María García"> Dra. María García</label>
+            <label><input type="checkbox" name="filtro-psicologo" value="Mtra. Ana Torres"> Mtra. Ana Torres</label>
+            <label><input type="checkbox" name="filtro-psicologo" value="Lic. Roberto Mendoza"> Lic. Roberto Mendoza</label>
+            <label><input type="checkbox" name="filtro-psicologo" value="Dra. Sofía Cruz"> Dra. Sofía Cruz</label>
+          </div>
+        </div>
+        
+        <div class="filtros-resultados" id="filtros-resultados"></div>
+        
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn--secondary" id="filtros-limpiar">Limpiar filtros</button>
+          <button class="modal-btn modal-btn--primary" id="filtros-buscar">Buscar</button>
+        </div>
+      </div>
+    </div>
+  <nav class="dock">
+    <div class="dock__icon" data-href="../psicologos/index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) -->
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      
+      <!-- Cuerpo de la libreta (Lomo lateral) -->
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      
+      <!-- Icono del usuario (Silueta) -->
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      
+      <!-- Pestañas laterales de la agenda -->
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../administrativos/index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) con degradado -->
+      <defs>
+        <linearGradient id="folderGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72D1FC"/>
+          <stop offset="1" stop-color="#4AB3F2"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient)"/>
+      
+      <!-- Icono de usuario individual (Silueta) -->
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) con degradado oficial -->
+      <defs>
+        <linearGradient id="homeGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FFD300"/>
+          <stop offset="1" stop-color="#FF9500"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient)"/>
+      
+      <!-- Icono de la Casa (Silueta Blanca) -->
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS/iOS (Squircle) con sombra suave -->
+      <defs>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+          <feOffset dx="0" dy="5" result="offsetblur"/>
+          <feFlood flood-color="#000000" flood-opacity="0.15"/>
+          <feComposite in2="offsetblur" operator="in"/>
+          <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <!-- Base Blanca con Sombra -->
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow)"/>
+      
+      <!-- Parte Superior Roja (Header) -->
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+
+      <!-- Texto: Día de la Semana (Ej. MIE) - Dinámico -->
+      <text id="day-name" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">
+        DIA
+      </text>
+      
+      <!-- Texto: Número del Mes (Ej. 18) - Dinámico -->
+      <text id="day-number" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">
+        00
+      </text>
+
+      </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="ios-clip">
+          <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+        </clipPath>
+        <linearGradient id="blue-grad" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#34AADC"/>
+          <stop offset="1" stop-color="#007AFF"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#ios-clip)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/> <path d="M128 128H350V350H128V128Z" fill="#A5E786"/> <path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/> <path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/> <path d="M520 750H896V896H520V750Z" fill="#FFCC00"/> <path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/> <path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/>
+        <path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+
+        <circle cx="400" cy="650" r="190" fill="white"/> <circle cx="400" cy="650" r="160" fill="url(#blue-grad)"/> <path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="finder-clip">
+          <rect x="128" y="128" width="768" height="768" rx="160" />
+        </clipPath>
+        
+        <linearGradient id="finder-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72D1FC"/>
+          <stop offset="1" stop-color="#4AB3F2"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#finder-clip)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/>
+        
+        <rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/>
+
+        <path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/>
+        
+        <circle cx="360" cy="420" r="45" fill="#003D75"/>
+        
+        <circle cx="664" cy="420" r="45" fill="#003D75"/>
+
+        <path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../chat/index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="messages-clip">
+          <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+        </clipPath>
+        
+        <linearGradient id="messages-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72E37B"/>
+          <stop offset="1" stop-color="#34C759"/>
+        </linearGradient>
+        
+        <linearGradient id="inner-bubble" x1="512" y1="310" x2="512" y2="714" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="white" stop-opacity="0.1"/>
+          <stop offset="1" stop-color="white" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#messages-clip)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg)"/>
+        
+        <path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/>
+        
+        <ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../capacitacion/index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <linearGradient id="capGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#18BFFB"/>
+          <stop offset="1" stop-color="#2072F3"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon" data-href="../perfil/index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+    <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/>
+    <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+    <clipPath id="a">
+        <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/>
+    </clipPath>
+    <g clip-path="url(#a)">
+        <path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b)"/>
+    </g>
+    <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+    <clipPath id="c">
+        <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/>
+    </clipPath>
+    <g clip-path="url(#c)">
+        <path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d)"/>
+    </g>
+    <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/>
+    <clipPath id="e">
+        <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/>
+    </clipPath>
+    <g clip-path="url(#e)">
+        <path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f)"/>
+    </g>
+    <defs>
+        <linearGradient id="b" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)">
+            <stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/>
+        </linearGradient>
+        <linearGradient id="d" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)">
+            <stop offset="0" style="stop-color:#51e376;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#34c759;stop-opacity:1"/>
+        </linearGradient>
+        <linearGradient id="f" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)">
+            <stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/>
+        </linearGradient>
+    </defs>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;">
+      <g id="Symbols_8_">
+        <g id="Graphics-_x2F_-App-Icons-_x2F_-Settings-">
+          <g id="Settings-Icon">
+            <linearGradient id="Background_13_" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#D3D7DD"></stop>
+              <stop offset="1" stop-color="#888C90"></stop>
+            </linearGradient>
+            <path id="Background_9_" d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_)"></path>
+            <circle id="Oval_3_" cx="50" cy="50" r="39" style="fill:#2e2e30"></circle>
+            <g id="Shape_1_">
+              <path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path>
+              <circle cx="50" cy="50" r="1.5" style="fill:none"></circle>
+              <linearGradient id="SVGID_1_" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#D9DADB"></stop>
+                <stop offset="1" stop-color="#7D8082"></stop>
+              </linearGradient>
+              <path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-.1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.1-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 .1.3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.5c.3 1.1.6 1.5 1.1 2.1l1 1.5c.5-.3.9-.5 1.4-.7l.3 3.7c.1 1.3-.2 1.4-.8.2l1.2-3.5c.4-.2 1-.4 1.5-.5l-.2 3.7c0 1.3-.5 1.4-.8.1l-1.1-3.6c.5-.2 1.1-.3 1.6-.4l0 3.7c.1 1.3.3 1.4.8.2l1-3.5c.4-.1 1-.3 1.5-.4l.3 3.7c.2 1.3 0 1.4.7.3l1.8-3.2c.5-.2 1-.3 1.6-.4l-.2 3.7c0 1.3-.3 1.4-.7.2l-1.3-3.5c.5-.2 1.1-.3 1.6-.4l-.4 3.7c-.1 1.3-.5 1.3-.8.1l-.8-3.7c-.3-.1-.8-.2-1.2-.2l.2-3.7c0-1.3-.5-1.3-.8-.1l-.6 3.6h-1.7l.5-3.7c.2-1.3 0-1.4-.7-.2l1.3-3.5c.5-.1 1-.2 1.5-.3l-.2 3.7c0 1.3.4 1.4.7.2l.7-3.5c.3.2.8.3 1.2.5l1.7-2.9c2.1.3 4.1 1.1 5.9 2.5 1.8 1.4 3.2 3.3 3.9 5.5.7 2.2.8 4.6.2 6.8-.6 2.2-1.8 4.2-3.4 5.8-1.7 1.7-3.8 2.9-6.1 3.5-2.3.6-4.7.5-6.9-.1-2.2-.6-4.2-1.8-5.8-3.4-1.7-1.7-2.9-3.8-3.5-6.1-.6-2.3-.5-4.7.1-6.9.6-2.3 1.8-4.3 3.5-6.1 1.6-1.7 3.7-2.9 5.9-3.4 2.2-.6 4.6-.5 6.8.2z" style="fill:url(#SVGID_1_)"></path>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+  </nav>
+    <script src="archivos.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Session check
+  if (syncStore.get('logged') !== 'true') {
+    window.location.href = '../login.html';
+    return;
+  }
+  // Set user avatar
+  var usuario = syncStore.get('usuario') || 'U';
+  var avatarEl = document.getElementById('user-avatar');
+  if (avatarEl) {
+    avatarEl.textContent = usuario.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2);
+  }
+  // Initialize archivos tree (handles all event wiring)
+  if (typeof archivosFS !== 'undefined' && archivosFS.initArchivosTree) {
+    archivosFS.initArchivosTree();
+  }
+});
+</script>
+</body>
+</html>

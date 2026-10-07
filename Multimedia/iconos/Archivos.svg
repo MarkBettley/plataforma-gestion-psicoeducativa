@@ -1,0 +1,28 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="finder-clip">
+      <rect x="128" y="128" width="768" height="768" rx="160" />
+    </clipPath>
+    
+    <linearGradient id="finder-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#72D1FC"/>
+      <stop offset="1" stop-color="#4AB3F2"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#finder-clip)">
+    <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/>
+    
+    <rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/>
+
+    <path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/>
+    
+    <circle cx="360" cy="420" r="45" fill="#003D75"/>
+    
+    <circle cx="664" cy="420" r="45" fill="#003D75"/>
+
+    <path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+</svg>

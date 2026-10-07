@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="messages-clip">
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+    </clipPath>
+    
+    <linearGradient id="messages-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#72E37B"/>
+      <stop offset="1" stop-color="#34C759"/>
+    </linearGradient>
+    
+    <linearGradient id="inner-bubble" x1="512" y1="310" x2="512" y2="714" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="white" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="white" stop-opacity="0.0"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#messages-clip)">
+    <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg)"/>
+    
+    <path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/>
+    
+    <ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+  </g>
+
+  <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+</svg>

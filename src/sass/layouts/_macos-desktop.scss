@@ -1,0 +1,10 @@
+// ===========================================
+// macOS Desktop Layout
+// ===========================================
+@import 'abstracts/variables';
+
+.macos-desktop {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

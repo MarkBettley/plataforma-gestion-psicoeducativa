@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo redondeado estilo macOS (Squircle) con degradado oficial -->
+  <defs>
+    <linearGradient id="homeGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD300"/>
+      <stop offset="1" stop-color="#FF9500"/>
+    </linearGradient>
+  </defs>
+  <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient)"/>
+  
+  <!-- Icono de la Casa (Silueta Blanca) -->
+  <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+</svg>

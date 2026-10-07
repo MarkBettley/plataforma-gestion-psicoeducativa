@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrativos - Plataforma Psicoeducativa</title>
+  <script src="/src/js/data/sync-store.js"></script>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <style>
+    .page { display: flex; height: 100vh; padding-top: 28px; background: #F2F2F7; }
+    .sidebar { width: 260px; background: rgba(255,255,255,0.9); border-right: 1px solid #E5E5EA; padding: 16px; overflow-y: auto; }
+    .search { margin-bottom: 12px; }
+    .search input { width: 100%; padding: 10px 14px; border-radius: 9999px; background: #E5E5EA; border: none; font-size: 15px; outline: none; }
+    .search input:focus { background: #D1D1D6; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filter { padding: 6px 12px; border-radius: 9999px; font-size: 12px; background: #E5E5EA; cursor: pointer; transition: all 0.2s; }
+    .filter:hover { background: #D1D1D6; }
+    .filter--active { background: #007AFF; color: white; }
+    .list { flex: 1; }
+    .section { font-size: 12px; font-weight: 600; color: #8E8E93; padding: 12px; }
+    .item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .item:hover { background: rgba(0,0,0,0.05); }
+    .item--active { background: rgba(0,122,255,0.1); }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#5856D6,#AF52DE); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; }
+    .info { flex: 1; }
+    .name { font-weight: 500; font-size: 14px; }
+    .role { font-size: 12px; color: #8E8E93; }
+    .main { flex: 1; padding: 24px; background: white; overflow-y: auto; }
+    .header { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; }
+    .avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg,#5856D6,#AF52DE); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 24px; }
+    .header-info { flex: 1; }
+    .title-lg { font-size: 22px; font-weight: 700; }
+    .subtitle-lg { font-size: 14px; color: #8E8E93; }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; margin-left: 8px; }
+    .status-badge--active { background: #34C759; color: white; }
+    .status-badge--inactive { background: #8E8E93; color: white; }
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: #F2F2F7; padding: 16px; border-radius: 12px; text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #007AFF; }
+    .stat-label { font-size: 11px; color: #8E8E93; }
+    .card { background: #F2F2F7; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 12px; }
+    .card-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #E5E5EA; }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: #8E8E93; font-size: 14px; }
+    .card-value { font-weight: 500; font-size: 14px; }
+    .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+    .btn { padding: 10px 18px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; border: none; }
+    .btn--primary { background: #007AFF; color: white; }
+    .btn--secondary { background: #F2F2F7; color: #007AFF; }
+    .btn--danger { background: #FF3B30; color: white; }
+    
+    /* Badges */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .badge--base { background: #34C759; color: white; }
+    .badge--confianza { background: #007AFF; color: white; }
+    .badge--honorarios { background: #FF9500; color: white; }
+    .badge--admin { background: #FF3B30; color: white; }
+    .badge--editor { background: #007AFF; color: white; }
+    .badge--viewer { background: #8E8E93; color: white; }
+    
+    /* Activity indicator */
+    .activity-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .activity-indicator--recent { background: #34C759; }
+    .activity-indicator--moderate { background: #FFD60A; }
+    .activity-indicator--old { background: #FF3B30; }
+    
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-overlay--open { display: flex; }
+    .modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #E5E5EA; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #8E8E93; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .modal-close:hover { background: #F2F2F7; }
+    .modal-body { padding: 24px; }
+    .modal-avatar-section { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
+    .modal-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg,#5856D6,#AF52DE); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 32px; }
+    .modal-user-info { flex: 1; }
+    .modal-user-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .modal-user-role { font-size: 14px; color: #8E8E93; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid #E5E5EA; display: flex; justify-content: flex-end; gap: 8px; }
+    
+    /* Menu bar dropdown styles */
+    .menu-bar__dropdown { position: relative; }
+    .menu-bar__menu { display: none; position: absolute; top: 100%; left: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; padding: 4px 0; z-index: 1001; }
+    .menu-bar__menu--open { display: block; }
+    .menu-bar__menu-item { padding: 6px 12px; cursor: pointer; font-size: 13px; }
+    .menu-bar__menu-item:hover { background: rgba(0,0,0,0.08); }
+    .menu-bar__menu-separator { height: 1px; background: #E5E5EA; margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <!-- Menu Bar -->
+  <header class="menu-bar">
+    <div class="menu-bar__left">
+      <span class="menu-bar__logo" style="cursor:pointer;" onclick="navigateTo('/src/html/dashboard.html')" title="SEP">SEP</span>
+      
+      <!-- Archivo dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-archivo" style="cursor:pointer;">Archivo</a>
+        <div class="menu-bar__menu" id="dropdown-archivo">
+          <div class="menu-bar__menu-item" onclick="alert('Nuevo Informe - En desarrollo');closeMenus()">Nuevo Informe</div>
+          <div class="menu-bar__menu-item" onclick="alert('Exportar - En desarrollo');closeMenus()">Exportar</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="window.print();closeMenus()">Imprimir</div>
+        </div>
+      </div>
+      
+      <!-- Editar dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-editar" style="cursor:pointer;">Editar</a>
+        <div class="menu-bar__menu" id="dropdown-editar">
+          <div class="menu-bar__menu-item" onclick="document.execCommand('undo');closeMenus()">Deshacer</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('redo');closeMenus()">Rehacer</div>
+          <div class="menu-bar__menu-separator"></div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('cut');closeMenus()">Cortar</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('copy');closeMenus()">Copiar</div>
+          <div class="menu-bar__menu-item" onclick="document.execCommand('paste');closeMenus()">Pegar</div>
+        </div>
+      </div>
+      
+      <!-- Ver dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-ver" style="cursor:pointer;">Ver</a>
+        <div class="menu-bar__menu" id="dropdown-ver">
+          <div class="menu-bar__menu-item" onclick="zoomIn();closeMenus()">Zoom +</div>
+          <div class="menu-bar__menu-item" onclick="zoomOut();closeMenus()">Zoom -</div>
+          <div class="menu-bar__menu-item" onclick="zoomReset();closeMenus()">Tamaño Original</div>
+        </div>
+      </div>
+      
+      <!-- Ayuda dropdown -->
+      <div class="menu-bar__dropdown">
+        <a href="#" id="menu-ayuda" style="cursor:pointer;">Ayuda</a>
+        <div class="menu-bar__menu" id="dropdown-ayuda">
+          <div class="menu-bar__menu-item" onclick="document.getElementById('search-input').focus();closeMenus()">Buscar</div>
+          <div class="menu-bar__menu-item" onclick="alert('Manual de Usuario - En desarrollo');closeMenus()">Manual de Usuario</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar__right">
+      <button class="menu-bar__right-icon" id="logout-btn" title="Cerrar sesión">⬋</button>
+      <div class="menu-bar__right-avatar" id="user-avatar">MG</div>
+      <div class="menu-bar__time" id="clock">10:30</div>
+    </div>
+  </header>
+  
+  <main class="page" style="padding-bottom: 80px;">
+    <aside class="sidebar">
+      <div class="search">
+        <input type="text" id="search-input" placeholder="Buscar administrativo...">
+      </div>
+      <div class="filters">
+        <span class="filter filter--active" data-filter="todos">Todos</span>
+        <span class="filter" data-filter="active">Activos</span>
+        <span class="filter" data-filter="inactive">Inactivos</span>
+        <span class="filter" data-filter="area">Área</span>
+      </div>
+      <div class="list" id="admin-list"></div>
+    </aside>
+    <section class="main" id="admin-detail"></section>
+  </main>
+  <nav class="dock">
+    <div class="dock__icon" data-href="../psicologos/index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) -->
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      
+      <!-- Cuerpo de la libreta (Lomo lateral) -->
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      
+      <!-- Icono del usuario (Silueta) -->
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      
+      <!-- Pestañas laterales de la agenda -->
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) con degradado -->
+      <defs>
+        <linearGradient id="folderGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72D1FC"/>
+          <stop offset="1" stop-color="#4AB3F2"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient)"/>
+      
+      <!-- Icono de usuario individual (Silueta) -->
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS (Squircle) con degradado oficial -->
+      <defs>
+        <linearGradient id="homeGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FFD300"/>
+          <stop offset="1" stop-color="#FF9500"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient)"/>
+      
+      <!-- Icono de la Casa (Silueta Blanca) -->
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <!-- Fondo redondeado estilo macOS/iOS (Squircle) con sombra suave -->
+      <defs>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+          <feOffset dx="0" dy="5" result="offsetblur"/>
+          <feFlood flood-color="#000000" flood-opacity="0.15"/>
+          <feComposite in2="offsetblur" operator="in"/>
+          <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <!-- Base Blanca con Sombra -->
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow)"/>
+      
+      <!-- Parte Superior Roja (Header) -->
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+
+      <!-- Texto: Día de la Semana (Ej. MIE) - Dinámico -->
+      <text id="day-name" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">
+        DIA
+      </text>
+      
+      <!-- Texto: Número del Mes (Ej. 18) - Dinámico -->
+      <text id="day-number" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">
+        00
+      </text>
+
+      <!-- Script para actualizar la fecha automáticamente -->
+      <script type="text/javascript">
+        <![CDATA[
+          function updateCalendarIcon() {
+            const now = new Date();
+            
+            // Configuración para el nombre del día (abreviado, 3 letras, mayúsculas)
+            const dayNameOptions = { weekday: 'short' };
+            let dayName = now.toLocaleDateString('es-ES', dayNameOptions).toUpperCase();
+            // Eliminar el punto si la abreviatura lo incluye (ej. "mié." -> "MIÉ")
+            dayName = dayName.replace('.', ''); 
+            
+            // Número del día
+            const dayNumber = now.getDate();
+
+            // Actualizar el DOM del SVG
+            document.getElementById('day-name').textContent = dayName;
+            document.getElementById('day-number').textContent = dayNumber;
+          }
+
+          // Ejecutar al cargar
+          updateCalendarIcon();
+        ]]>
+      </script>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="ios-clip">
+          <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+        </clipPath>
+        <linearGradient id="blue-grad" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#34AADC"/>
+          <stop offset="1" stop-color="#007AFF"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#ios-clip)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/> <path d="M128 128H350V350H128V128Z" fill="#A5E786"/> <path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/> <path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/> <path d="M520 750H896V896H520V750Z" fill="#FFCC00"/> <path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/> <path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/>
+        <path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+
+        <circle cx="400" cy="650" r="190" fill="white"/> <circle cx="400" cy="650" r="160" fill="url(#blue-grad)"/> <path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../archivos/index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="finder-clip">
+          <rect x="128" y="128" width="768" height="768" rx="160" />
+        </clipPath>
+        
+        <linearGradient id="finder-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72D1FC"/>
+          <stop offset="1" stop-color="#4AB3F2"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#finder-clip)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/>
+        
+        <rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/>
+
+        <path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/>
+        
+        <circle cx="360" cy="420" r="45" fill="#003D75"/>
+        
+        <circle cx="664" cy="420" r="45" fill="#003D75"/>
+
+        <path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../chat/index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <clipPath id="messages-clip">
+          <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" />
+        </clipPath>
+        
+        <linearGradient id="messages-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#72E37B"/>
+          <stop offset="1" stop-color="#34C759"/>
+        </linearGradient>
+        
+        <linearGradient id="inner-bubble" x1="512" y1="310" x2="512" y2="714" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="white" stop-opacity="0.1"/>
+          <stop offset="1" stop-color="white" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+
+      <g clip-path="url(#messages-clip)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg)"/>
+        
+        <path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/>
+        
+        <ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../capacitacion/index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs>
+        <linearGradient id="capGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#18BFFB"/>
+          <stop offset="1" stop-color="#2072F3"/>
+        </linearGradient>
+      </defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon" data-href="../perfil/index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+    <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/>
+    <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+    <clipPath id="a">
+        <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/>
+    </clipPath>
+    <g clip-path="url(#a)">
+        <path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b)"/>
+    </g>
+    <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+    <clipPath id="c">
+        <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/>
+    </clipPath>
+    <g clip-path="url(#c)">
+        <path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d)"/>
+    </g>
+    <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/>
+    <clipPath id="e">
+        <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/>
+    </clipPath>
+    <g clip-path="url(#e)">
+        <path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f)"/>
+    </g>
+    <defs>
+        <linearGradient id="b" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)">
+            <stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/>
+        </linearGradient>
+        <linearGradient id="d" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)">
+            <stop offset="0" style="stop-color:#51e376;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#34c759;stop-opacity:1"/>
+        </linearGradient>
+        <linearGradient id="f" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)">
+            <stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/>
+            <stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/>
+        </linearGradient>
+    </defs>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;">
+      <g id="Symbols_8_">
+        <g id="Graphics-_x2F_-App-Icons-_x2F_-Settings-">
+          <g id="Settings-Icon">
+            <linearGradient id="Background_13_" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#D3D7DD"></stop>
+              <stop offset="1" stop-color="#888C90"></stop>
+            </linearGradient>
+            <path id="Background_9_" d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_)"></path>
+            <circle id="Oval_3_" cx="50" cy="50" r="39" style="fill:#2e2e30"></circle>
+            <g id="Shape_1_">
+              <path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path>
+              <circle cx="50" cy="50" r="1.5" style="fill:none"></circle>
+              <linearGradient id="SVGID_1_" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#D9DADB"></stop>
+                <stop offset="1" stop-color="#7D8082"></stop>
+              </linearGradient>
+              <path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.1-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 1 .3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.5-3.4" fill="url(#SVGID_1_)"/>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+  </nav>
+
+  <!-- Modal Ver Perfil -->
+  <div class="modal-overlay" id="admin-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Perfil del Administrativo</div>
+        <button class="modal-close" onclick="closeAdminModal()">×</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" onclick="editAdmin(currentAdminId)">Editar</button>
+        <button class="btn btn--primary" onclick="toggleStatus(currentAdminId)">Cambiar Estatus</button>
+        <button class="btn btn--secondary" onclick="closeAdminModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data
+    const administrativos = [
+      {id:1, nombre:'Lic. Ana López', area:'Secretaría General', puesto:'Secretaria', cargo:'Secretaria General', 
+       avatar:'AL', email:'ana.lopez@sep.hgo.gob.mx', telefono:'771 123 4567', extension:'101', 
+       status:'active', informes:45, visitas:12, eficiencia:98,
+       curp:'LOJA850101MHGPRN01', rfc:'LOJA850101A', fechaIngreso:'2020-03-15', fechaNacimiento:'1985-01-01',
+       tipoContrato:'Base', nivelAcceso:'Admin', ultimaActividad:'2026-04-27T10:30:00'},
+      {id:2, nombre:'C.P. Sofía Cruz', area:'Contabilidad', puesto:'Contador', cargo:'Contador General', 
+       avatar:'SC', email:'sofia.cruz@sep.hgo.gob.mx', telefono:'771 123 4568', extension:'102', 
+       status:'active', informes:38, visitas:8, eficiencia:95,
+       curp:'CSOX880520MDFRRN02', rfc:'CSOX880520A', fechaIngreso:'2019-06-10', fechaNacimiento:'1988-05-20',
+       tipoContrato:'Base', nivelAcceso:'Editor', ultimaActividad:'2026-04-27T09:15:00'},
+      {id:3, nombre:'Ing. Roberto Martínez', area:'Coordinación Académica', puesto:'Coordinador', cargo:'Coordinador Académico', 
+       avatar:'RM', email:'roberto.martinez@sep.hgo.gob.mx', telefono:'771 123 4569', extension:'103', 
+       status:'active', informes:52, visitas:15, eficiencia:97,
+       curp:'MARR900815HDFPRN03', rfc:'MARR900815A', fechaIngreso:'2018-01-20', fechaNacimiento:'1990-08-15',
+       tipoContrato:'Confianza', nivelAcceso:'Admin', ultimaActividad:'2026-04-27T08:45:00'},
+      {id:4, nombre:'Lic. María González', area:'Recursos Humanos', puesto:'Analista', cargo:'Analista de RRHH', 
+       avatar:'MG', email:'maria.gonzalez@sep.hgo.gob.mx', telefono:'771 123 4570', extension:'104', 
+       status:'inactive', informes:28, visitas:5, eficiencia:92,
+       curp:'GOML920430MDFPRN04', rfc:'GOML920430A', fechaIngreso:'2021-09-05', fechaNacimiento:'1992-04-30',
+       tipoContrato:'Base', nivelAcceso:'Viewer', ultimaActividad:'2026-04-25T14:20:00'},
+      {id:5, nombre:'Lic. Carlos Jiménez', area:'Administración', puesto:'Administrativo', cargo:'Administrador', 
+       avatar:'CJ', email:'carlos.jimenez@sep.hgo.gob.mx', telefono:'771 123 4571', extension:'105', 
+       status:'active', informes:33, visitas:10, eficiencia:94,
+       curp:'JICA950610HDFPRN05', rfc:'JICA950610A', fechaIngreso:'2022-02-28', fechaNacimiento:'1995-06-10',
+       tipoContrato:'Honorarios', nivelAcceso:'Editor', ultimaActividad:'2026-04-27T10:00:00'}
+    ];
+
+    let currentFilter = 'todos';
+    let currentAdminId = null;
+    let currentAdmin = null;
+    let filteredList = [...administrativos];
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function logout() {
+      syncStore.clear();
+      navigateTo('../login.html');
+    }
+
+    function closeMenus() {
+      ['archivo', 'editar', 'ver', 'ayuda'].forEach(m => {
+        document.getElementById('dropdown-' + m).classList.remove('menu-bar__menu--open');
+      });
+    }
+
+    let zoomLevel = 1;
+    function zoomIn() { zoomLevel = Math.min(zoomLevel + 0.1, 2); document.body.style.transform = 'scale(' + zoomLevel + ')'; }
+    function zoomOut() { zoomLevel = Math.max(zoomLevel - 0.1, 0.5); document.body.style.transform = 'scale(' + zoomLevel + ')'; }
+    function zoomReset() { zoomLevel = 1; document.body.style.transform = 'scale(1)'; }
+
+    // Calculate antiquity from fechaIngreso
+    function calculateAntiguedad(fechaIngreso) {
+      const ingreso = new Date(fechaIngreso);
+      const ahora = new Date();
+      let años = ahora.getFullYear() - ingreso.getFullYear();
+      let meses = ahora.getMonth() - ingreso.getMonth();
+      
+      if (meses < 0) {
+        años--;
+        meses += 12;
+      }
+      
+      if (años === 0 && meses === 0) return 'Menos de un mes';
+      if (años === 0) return meses + ' mes' + (meses > 1 ? 'es' : '');
+      if (meses === 0) return años + ' año' + (años > 1 ? 's' : '');
+      return años + ' año' + (años > 1 ? 's' : '') + ', ' + meses + ' mes' + (meses > 1 ? 'es' : '');
+    }
+
+    // Calculate time since last activity
+    function calculateTimeSince(dateString) {
+      const activity = new Date(dateString);
+      const ahora = new Date();
+      const diffMs = ahora - activity;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+      
+      if (diffMins < 1) return 'Hace un momento';
+      if (diffMins < 60) return 'Hace ' + diffMins + ' minuto' + (diffMins > 1 ? 's' : '');
+      if (diffHours < 24) return 'Hace ' + diffHours + ' hora' + (diffHours > 1 ? 's' : '');
+      return 'Hace ' + diffDays + ' día' + (diffDays > 1 ? 's' : '');
+    }
+
+    // Get activity indicator class
+    function getActivityClass(dateString) {
+      const activity = new Date(dateString);
+      const ahora = new Date();
+      const diffMs = ahora - activity;
+      const diffHours = Math.floor(diffMs / 3600000);
+      
+      if (diffHours < 2) return 'activity-indicator--recent';
+      if (diffHours < 24) return 'activity-indicator--moderate';
+      return 'activity-indicator--old';
+    }
+
+    // Get contract badge class
+    function getContractBadgeClass(tipo) {
+      switch(tipo) {
+        case 'Base': return 'badge--base';
+        case 'Confianza': return 'badge--confianza';
+        case 'Honorarios': return 'badge--honorarios';
+        default: return 'badge--viewer';
+      }
+    }
+
+    // Get access level badge class
+    function getAccessBadgeClass(nivel) {
+      switch(nivel) {
+        case 'Admin': return 'badge--admin';
+        case 'Editor': return 'badge--editor';
+        case 'Viewer': return 'badge--viewer';
+        default: return 'badge--viewer';
+      }
+    }
+
+    function selectAdmin(id) {
+      const admin = administrativos.find(a => a.id === id);
+      if (!admin) return;
+      
+      currentAdminId = id;
+      currentAdmin = admin;
+      
+      // Update active state in list
+      document.querySelectorAll('.item').forEach(el => el.classList.remove('item--active'));
+      document.querySelectorAll('.item').forEach(el => {
+        if (parseInt(el.dataset.id) === id) {
+          el.classList.add('item--active');
+        }
+      });
+      
+      const detail = document.getElementById('admin-detail');
+      const antiguedad = calculateAntiguedad(admin.fechaIngreso);
+      const tiempoActividad = calculateTimeSince(admin.ultimaActividad);
+      const activityClass = getActivityClass(admin.ultimaActividad);
+      
+      detail.innerHTML = `
+        <div class="header">
+          <div class="avatar-lg">${admin.avatar}</div>
+          <div class="header-info">
+            <div class="title-lg">${admin.nombre}</div>
+            <div class="subtitle-lg">${admin.puesto} - ${admin.area}
+              <span class="status-badge status-badge--${admin.status}">${admin.status === 'active' ? 'Activo' : 'Inactivo'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value">${admin.informes}</div>
+            <div class="stat-label">Informes</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">${admin.visitas}</div>
+            <div class="stat-label">Visitas</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">${admin.eficiencia}%</div>
+            <div class="stat-label">Eficiencia</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="font-size:14px;">${antiguedad}</div>
+            <div class="stat-label">Antigüedad</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS LABORALES</div>
+          <div class="card-row">
+            <span class="card-label">Puesto</span>
+            <span class="card-value">${admin.puesto}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Cargo</span>
+            <span class="card-value">${admin.cargo}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Área/Departamento</span>
+            <span class="card-value">${admin.area}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Tipo de Contrato</span>
+            <span class="card-value"><span class="badge ${getContractBadgeClass(admin.tipoContrato)}">${admin.tipoContrato}</span></span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Fecha de Ingreso</span>
+            <span class="card-value">${admin.fechaIngreso}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Antigüedad</span>
+            <span class="card-value">${antiguedad}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Nivel de Acceso</span>
+            <span class="card-value"><span class="badge ${getAccessBadgeClass(admin.nivelAcceso)}">${admin.nivelAcceso}</span></span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS DE IDENTIDAD</div>
+          <div class="card-row">
+            <span class="card-label">CURP</span>
+            <span class="card-value">${admin.curp}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">RFC</span>
+            <span class="card-value">${admin.rfc}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Fecha de Nacimiento</span>
+            <span class="card-value">${admin.fechaNacimiento}</span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS DE CONTACTO</div>
+          <div class="card-row">
+            <span class="card-label">Email</span>
+            <span class="card-value">${admin.email}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Teléfono</span>
+            <span class="card-value">${admin.telefono}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Extensión</span>
+            <span class="card-value">${admin.extension}</span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">INFORMACIÓN ADICIONAL</div>
+          <div class="card-row">
+            <span class="card-label">Última Actividad</span>
+            <span class="card-value">
+              <span class="activity-indicator ${activityClass}"></span>
+              ${tiempoActividad}
+            </span>
+          </div>
+        </div>
+        
+        <div class="actions">
+          <button class="btn btn--primary" onclick="showAdminModal(${admin.id})">Ver Perfil Completo</button>
+          <button class="btn btn--secondary" onclick="editAdmin(${admin.id})">Editar</button>
+          <button class="btn ${admin.status === 'active' ? 'btn--danger' : 'btn--primary'}" onclick="toggleStatus(${admin.id})">
+            ${admin.status === 'active' ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>
+      `;
+    }
+
+    function showAdminModal(id) {
+      const admin = administrativos.find(a => a.id === id);
+      if (!admin) return;
+      
+      currentAdminId = id;
+      currentAdmin = admin;
+      
+      const antiguedad = calculateAntiguedad(admin.fechaIngreso);
+      const tiempoActividad = calculateTimeSince(admin.ultimaActividad);
+      const activityClass = getActivityClass(admin.ultimaActividad);
+      
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = `
+        <div class="modal-avatar-section">
+          <div class="modal-avatar">${admin.avatar}</div>
+          <div class="modal-user-info">
+            <div class="modal-user-name">${admin.nombre}</div>
+            <div class="modal-user-role">${admin.puesto} / ${admin.cargo}</div>
+            <div style="margin-top:8px;">
+              <span class="status-badge status-badge--${admin.status}">${admin.status === 'active' ? 'Activo' : 'Inactivo'}</span>
+              <span class="badge ${getContractBadgeClass(admin.tipoContrato)}" style="margin-left:8px;">${admin.tipoContrato}</span>
+              <span class="badge ${getAccessBadgeClass(admin.nivelAcceso)}" style="margin-left:8px;">${admin.nivelAcceso}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS LABORALES</div>
+          <div class="card-row"><span class="card-label">Área/Departamento</span><span class="card-value">${admin.area}</span></div>
+          <div class="card-row"><span class="card-label">Puesto</span><span class="card-value">${admin.puesto}</span></div>
+          <div class="card-row"><span class="card-label">Cargo</span><span class="card-value">${admin.cargo}</span></div>
+          <div class="card-row"><span class="card-label">Tipo de Contrato</span><span class="card-value"><span class="badge ${getContractBadgeClass(admin.tipoContrato)}">${admin.tipoContrato}</span></span></div>
+          <div class="card-row"><span class="card-label">Fecha de Ingreso</span><span class="card-value">${admin.fechaIngreso}</span></div>
+          <div class="card-row"><span class="card-label">Antigüedad</span><span class="card-value">${antiguedad}</span></div>
+          <div class="card-row"><span class="card-label">Nivel de Acceso</span><span class="card-value"><span class="badge ${getAccessBadgeClass(admin.nivelAcceso)}">${admin.nivelAcceso}</span></span></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS DE IDENTIDAD</div>
+          <div class="card-row"><span class="card-label">CURP</span><span class="card-value">${admin.curp}</span></div>
+          <div class="card-row"><span class="card-label">RFC</span><span class="card-value">${admin.rfc}</span></div>
+          <div class="card-row"><span class="card-label">Fecha de Nacimiento</span><span class="card-value">${admin.fechaNacimiento}</span></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">DATOS DE CONTACTO</div>
+          <div class="card-row"><span class="card-label">Email</span><span class="card-value">${admin.email}</span></div>
+          <div class="card-row"><span class="card-label">Teléfono</span><span class="card-value">${admin.telefono}</span></div>
+          <div class="card-row"><span class="card-label">Extensión</span><span class="card-value">${admin.extension}</span></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">ESTADÍSTICAS</div>
+          <div class="card-row"><span class="card-label">Informes</span><span class="card-value">${admin.informes}</span></div>
+          <div class="card-row"><span class="card-label">Visitas</span><span class="card-value">${admin.visitas}</span></div>
+          <div class="card-row"><span class="card-label">Eficiencia</span><span class="card-value">${admin.eficiencia}%</span></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">INFORMACIÓN ADICIONAL</div>
+          <div class="card-row">
+            <span class="card-label">Última Actividad</span>
+            <span class="card-value">
+              <span class="activity-indicator ${activityClass}"></span>
+              ${tiempoActividad} (${admin.ultimaActividad})
+            </span>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('admin-modal').classList.add('modal-overlay--open');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.remove('modal-overlay--open');
+    }
+
+    function editAdmin(id) {
+      alert('Función de edición en desarrollo para el administrativo ID: ' + id);
+    }
+
+    function toggleStatus(id) {
+      const admin = administrativos.find(a => a.id === id);
+      if (!admin) return;
+      
+      if (confirm('¿Está seguro de cambiar el estatus de ' + admin.nombre + '?')) {
+        admin.status = admin.status === 'active' ? 'inactive' : 'active';
+        // Refresh view
+        selectAdmin(id);
+        filterAndRender();
+        alert('Estatus cambiado exitosamente a: ' + (admin.status === 'active' ? 'Activo' : 'Inactivo'));
+      }
+    }
+
+    function filterAndRender() {
+      let list = [...administrativos];
+      
+      // Filter by status
+      if (currentFilter === 'active') {
+        list = list.filter(a => a.status === 'active');
+      } else if (currentFilter === 'inactive') {
+        list = list.filter(a => a.status === 'inactive');
+      } else if (currentFilter === 'area') {
+        list = list;
+      }
+      
+      filteredList = list;
+      renderList();
+      
+      // Select first if available
+      if (filteredList.length > 0) {
+        selectAdmin(filteredList[0].id);
+      }
+    }
+
+    function renderList() {
+      const list = document.getElementById('admin-list');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      if (filteredList.length === 0) {
+        list.innerHTML = '<div style="padding:24px;text-align:center;color:#8E8E93;">No se encontraron administrativos</div>';
+        return;
+      }
+      
+      // Group by first letter
+      const grouped = {};
+      filteredList.forEach(a => {
+        const letter = a.nombre.charAt(0);
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push(a);
+      });
+      
+      Object.keys(grouped).sort().forEach(letter => {
+        // Section header
+        const section = document.createElement('div');
+        section.className = 'section';
+        section.textContent = letter;
+        list.appendChild(section);
+        
+        grouped[letter].forEach(a => {
+          const item = document.createElement('div');
+          item.className = 'item';
+          item.dataset.id = a.id;
+          const activityClass = getActivityClass(a.ultimaActividad);
+          item.innerHTML = '<div class="avatar">' + a.avatar + '</div><div class="info"><div class="name">' + a.nombre + '</div><div class="role">' + a.puesto + ' - ' + a.area + '</div></div><span class="activity-indicator ' + activityClass + '" title="Última actividad"></span>';
+          item.addEventListener('click', () => selectAdmin(a.id));
+          list.appendChild(item);
+        });
+      });
+    }
+
+    // Search function - now includes CURP, RFC, puesto
+    function search(text) {
+      text = text.toLowerCase();
+      filteredList = administrativos.filter(a => 
+        a.nombre.toLowerCase().includes(text) ||
+        a.area.toLowerCase().includes(text) ||
+        a.email.toLowerCase().includes(text) ||
+        a.curp.toLowerCase().includes(text) ||
+        a.rfc.toLowerCase().includes(text) ||
+        a.puesto.toLowerCase().includes(text) ||
+        a.cargo.toLowerCase().includes(text)
+      );
+      renderList();
+      if (filteredList.length > 0) {
+        selectAdmin(filteredList[0].id);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check session
+      if (syncStore.get('logged') !== 'true') {
+        navigateTo('../login.html');
+        return;
+      }
+      
+      // User info
+      const usuario = syncStore.get('usuario') || 'Usuario';
+      document.getElementById('user-avatar').textContent = usuario.split(' ').map(n => n[0]).join('').substring(0,2);
+      
+      // Logout
+      document.getElementById('logout-btn').addEventListener('click', logout);
+      
+      // Dock navigation
+      document.querySelectorAll('.dock__icon').forEach(icon => {
+        icon.addEventListener('click', () => {
+          const href = icon.dataset.href;
+          if (href) navigateTo(href);
+        });
+      });
+      
+      // Search
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        search(e.target.value);
+      });
+      
+      // Filters
+      document.querySelectorAll('.filter').forEach(filter => {
+        filter.addEventListener('click', () => {
+          document.querySelectorAll('.filter').forEach(f => f.classList.remove('filter--active'));
+          filter.classList.add('filter--active');
+          currentFilter = filter.dataset.filter;
+          filterAndRender();
+        });
+      });
+      
+      // Render list
+      filterAndRender();
+      
+      // Clock
+      setInterval(() => {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
+      }, 1000);
+      
+      // Menu bar dropdowns
+      ['archivo', 'editar', 'ver', 'ayuda'].forEach(menu => {
+        const btn = document.getElementById('menu-' + menu);
+        const dropdown = document.getElementById('dropdown-' + menu);
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isOpen = dropdown.classList.contains('menu-bar__menu--open');
+          ['archivo', 'editar', 'ver', 'ayuda'].forEach(m => {
+            document.getElementById('dropdown-' + m).classList.remove('menu-bar__menu--open');
+          });
+          if (!isOpen) dropdown.classList.add('menu-bar__menu--open');
+        });
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.menu-bar__dropdown')) {
+          closeMenus();
+        }
+      });
+      
+      // Close modal on overlay click
+      document.getElementById('admin-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+          closeAdminModal();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

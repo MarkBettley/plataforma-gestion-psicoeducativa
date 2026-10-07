@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capacitación - Plataforma Psicoeducativa</title>
+  <script src="/src/js/data/sync-store.js"></script>
+  <link rel="stylesheet" href="/src/css/main.css">
+  <style>
+    .cap { display: flex; flex-direction: column; height: 100vh; padding-top: 28px; background: #F2F2F7; }
+    .tabs { display: flex; background: white; border-bottom: 1px solid #E5E5EA; overflow-x: auto; }
+    .tab { flex: 1; min-width: fit-content; padding: 14px 16px; text-align: center; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .tab--active { border-bottom-color: #007AFF; color: #007AFF; font-weight: 600; }
+    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 100px; }
+    
+    /* Featured Banner */
+    .featured { background: linear-gradient(135deg,#1a1a2e,#16213e); border-radius: 16px; padding: 20px; color: white; margin-bottom: 20px; }
+    .featured-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .featured-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .featured-desc { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 16px; line-height: 1.4; }
+    .featured-btn { padding: 10px 20px; background: #007AFF; color: white; border-radius: 9999px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .featured-btn:hover { opacity: 0.9; }
+    
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: white; border-radius: 12px; padding: 16px 8px; text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #007AFF; }
+    .stat-label { font-size: 11px; color: #8E8E93; margin-top: 4px; }
+    
+    /* Section */
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap: 12px; }
+    
+    /* Card */
+    .card { background: white; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; position: relative; }
+    .card:hover { transform: scale(1.02); }
+    .card-img { height: 120px; background: linear-gradient(135deg,#007AFF,#5856D6); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .card-body { padding: 12px; }
+    .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; line-height: 1.2; }
+    .card-meta { font-size: 12px; color: #8E8E93; margin-bottom: 8px; }
+    .card-badge { display: inline-block; padding: 2px 8px; background: rgba(0,122,255,0.1); color: #007AFF; border-radius: 4px; font-size: 11px; font-weight: 500; margin-top: 4px; }
+    
+    /* Buttons */
+    .card-btn { display: block; width: 100%; padding: 8px; text-align: center; font-size: 13px; font-weight: 600; border: none; cursor: pointer; border-radius: 0 0 12px 12px; transition: all 0.3s; }
+    .card-btn--get { background: rgba(0,122,255,0.1); color: #007AFF; }
+    .card-btn--get:hover { background: rgba(0,122,255,0.2); }
+    .card-btn--open { background: #E5E5EA; color: #1C1C1E; }
+    .card-btn--open:hover { background: #D1D1D6; }
+    .card-btn--progress { background: rgba(52,199,89,0.1); color: #34C759; }
+    
+    /* Progress Circle */
+    .progress-circle { width: 24px; height: 24px; border-radius: 50%; border: 3px solid #E5E5EA; border-top-color: #34C759; display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-circle--done { border-color: #34C759; animation: none; }
+    
+    /* Progress Bar */
+    .progress-bar-container { width: 100%; height: 4px; background: #E5E5EA; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: #34C759; border-radius: 2px; transition: width 0.3s; }
+    
+    /* Workshop Item */
+    .workshop-item { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .workshop-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .workshop-detail { font-size: 13px; color: #8E8E93; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .workshop-detail svg { width: 16px; height: 16px; fill: #8E8E93; }
+    .workshop-btn { margin-top: 12px; padding: 10px 20px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+    .workshop-btn:hover { opacity: 0.9; }
+    .workshop-btn:disabled { background: #E5E5EA; color: #8E8E93; cursor: not-allowed; }
+    
+    /* Certification Item */
+    .cert-item { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; }
+    .cert-icon { width: 50px; height: 50px; background: linear-gradient(135deg,#FFD700,#FFA500); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .cert-body { flex: 1; }
+    .cert-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .cert-date { font-size: 13px; color: #8E8E93; }
+    .cert-btn { padding: 8px 16px; background: rgba(0,122,255,0.1); color: #007AFF; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .cert-btn:hover { background: rgba(0,122,255,0.2); }
+    
+    /* My Courses */
+    .my-course-item { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .my-course-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .my-course-emoji { width: 40px; height: 40px; background: linear-gradient(135deg,#007AFF,#5856D6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .my-course-info { flex: 1; }
+    .my-course-title { font-size: 15px; font-weight: 600; }
+    .my-course-meta { font-size: 12px; color: #8E8E93; }
+    .my-course-btn { padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .my-course-btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <header class="menu-bar">
+    <div class="menu-bar__left">
+      <span class="menu-bar__logo" onclick="navigateTo('/src/html/dashboard.html')" style="cursor:pointer">SEP</span>
+    </div>
+    <div class="menu-bar__right">
+      <button id="logout-btn">⬋</button>
+      <div id="user-avatar">MG</div>
+      <div id="clock">10:30</div>
+    </div>
+  </header>
+  
+  <main class="cap" style="padding-bottom: 80px;">
+    <div class="tabs">
+      <div class="tab tab--active" data-tab="hoy">Hoy</div>
+      <div class="tab" data-tab="cursos">Cursos</div>
+      <div class="tab" data-tab="talleres">Talleres</div>
+      <div class="tab" data-tab="certificaciones">Certificaciones</div>
+      <div class="tab" data-tab="mis-cursos">Mis Cursos</div>
+    </div>
+    <div class="content" id="content">
+      <!-- Content will be rendered dynamically -->
+    </div>
+  </main>
+  
+  <nav class="dock">
+    <div class="dock__icon" data-href="../psicologos/index.html" title="Psicólogos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="#E5E5E7"/>
+      <path d="M128 288C128 200 200 128 288 128H320V896H288C200 896 128 824 128 736V288Z" fill="#8E8E93"/>
+      <circle cx="544" cy="420" r="110" fill="#8E8E93"/>
+      <path d="M360 740C360 640 440 560 544 560C648 560 728 640 728 740V780H360V740Z" fill="#8E8E93"/>
+      <rect x="832" y="300" width="64" height="40" rx="8" fill="#FF3B30"/>
+      <rect x="832" y="360" width="64" height="40" rx="8" fill="#FF9500"/>
+      <rect x="832" y="420" width="64" height="40" rx="8" fill="#FFCC00"/>
+      <rect x="832" y="480" width="64" height="40" rx="8" fill="#4CD964"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../administrativos/index.html" title="Administrativos"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="folderGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#folderGradient)"/>
+      <circle cx="512" cy="420" r="110" fill="#E5E5E7"/>
+      <path d="M328 740C328 640 408 560 512 560C616 560 696 640 696 740V780H328V740Z" fill="#E5E5E7"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../escuelas/index.html" title="Escuelas"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="homeGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFD300"/><stop offset="1" stop-color="#FF9500"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#homeGradient)"/>
+      <path d="M512 256L224 512H320V768H704V512H800L512 256ZM448 704V576H576V704H448Z" fill="white"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../agenda-visitas/index.html" title="Agenda"><svg width="48" height="48" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:48px;height:48px;display:block;">
+      <defs><filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="10"/><feOffset dx="0" dy="5" result="offsetblur"/><feFlood flood-color="#000000" flood-opacity="0.15"/><feComposite in2="offsetblur" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="white" filter="url(#shadow)"/>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V340H128V288Z" fill="#FF3B30"/>
+      <text id="day-name" x="512" y="270" text-anchor="middle" fill="white" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="80" font-weight="700" letter-spacing="2">DIA</text>
+      <text id="day-number" x="512" y="730" text-anchor="middle" fill="#1C1C1E" font-family="-apple-system, SF Pro Display, Helvetica Neue, Arial" font-size="420" font-weight="300">00</text>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../mapa-calor/index.html" title="Mapa"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="ios-clip"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="blue-grad" x1="512" y1="400" x2="512" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34AADC"/><stop offset="1" stop-color="#007AFF"/></linearGradient></defs>
+      <g clip-path="url(#ios-clip)">
+        <rect x="128" y="128" width="800" height="800" fill="#F9F9F9"/><path d="M128 128H350V350H128V128Z" fill="#A5E786"/><path d="M128 350H350V750L128 850V350Z" fill="#F7A1D2"/><path d="M520 128H896V450L520 650V128Z" fill="#7EEA8D"/><path d="M520 750H896V896H520V750Z" fill="#FFCC00"/><path d="M600 128C750 128 896 250 896 400V128H600Z" fill="#D1D1D6"/><path d="M350 128V896M520 128V896M128 350H520M128 750H896" stroke="white" stroke-width="35"/>
+        <path d="M520 650L896 450" stroke="white" stroke-width="35"/>
+        <circle cx="400" cy="650" r="190" fill="white"/><circle cx="400" cy="650" r="160" fill="url(#blue-grad)"/><path d="M400 540L460 740L400 700L340 740L400 540Z" fill="white"/>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../archivos/index.html" title="Archivos"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="finder-clip"><rect x="128" y="128" width="768" height="768" rx="160"/></clipPath><linearGradient id="finder-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72D1FC"/><stop offset="1" stop-color="#4AB3F2"/></linearGradient></defs>
+      <g clip-path="url(#finder-clip)">
+        <rect x="128" y="128" width="384" height="768" fill="#1B75D0"/>
+        <rect x="512" y="128" width="384" height="768" fill="#D1E9F7"/>
+        <path d="M512 128V450L440 500L512 550V896" stroke="#003D75" stroke-width="8" fill="none"/>
+        <circle cx="360" cy="420" r="45" fill="#003D75"/><circle cx="664" cy="420" r="45" fill="#003D75"/>
+        <path d="M320 650C320 750 704 750 704 650" stroke="#003D75" stroke-width="40" stroke-linecap="round" fill="none"/>
+      </g>
+      <rect x="128" y="128" width="768" height="768" rx="160" stroke="rgba(0,0,0,0.1)" stroke-width="2" fill="none"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon" data-href="../chat/index.html" title="Chat"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><clipPath id="messages-clip"><path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z"/></clipPath><linearGradient id="messages-bg" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#72E37B"/><stop offset="1" stop-color="#34C759"/></linearGradient></defs>
+      <g clip-path="url(#messages-clip)">
+        <rect x="128" y="128" width="768" height="768" fill="url(#messages-bg)"/>
+        <path d="M512 310C366 310 248 400 248 512C248 566 286 616 348 654C330 690 300 730 250 740C310 740 370 710 400 680C436 694 472 700 512 700C658 700 776 610 776 498C776 386 658 310 512 310Z" fill="white" fill-opacity="0.9"/>
+        <ellipse cx="512" cy="512" rx="100" ry="40" fill="white"/>
+      </g>
+      <path d="M128 288C128 200 200 128 288 128H736C824 128 896 200 896 288V736C896 824 824 896 736 896H288C200 896 128 824 128 736V288Z" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__icon dock__icon--active" data-href="index.html" title="Capacitación"><svg width="48" height="48" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;display:block;">
+      <defs><linearGradient id="capGradient" x1="512" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#18BFFB"/><stop offset="1" stop-color="#2072F3"/></linearGradient></defs>
+      <rect x="128" y="128" width="768" height="768" rx="160" fill="url(#capGradient)"/>
+      <path fill="white" d="M508.1 235.8l20.7-35.8c12.8-22.4 41.4-30 63.7-17.1s30 41.4 17.1 63.7L409.9 591.7h144.3c46.9 0 73 55 52.7 93.1H182.8c-25.9 0-46.6-20.8-46.6-46.6s20.8-46.6 46.6-46.6h118.7l152.1-263.5L449.7 301c-12.8-22.4-5.3-50.7 17.1-63.7 22.4-12.8 50.7-5.3 63.7 17.1l-22.4 0zm-179.4 497.3l-44.8 77.7c-12.8 22.4-41.4 30-63.7 17.1s-30-41.4-17.1-63.7l33.2-57.3c29.1-15.1 38.7-52.2 57.6-25.8zm386.4-140.5h121.1c25.9 0 46.6 20.8 46.6 46.6s-20.8 46.6-46.6 46.6h-67.3l45.4 78.8c12.8 22.4 5.3 50.7-17.1 63.7-22.4 12.8-50.7 5.3-63.7-17.1-76.5-132.7-133.9-231.7-172.1-297.8-39-67.3-11.1-134.7 16.4-157.6 27.6-22.9 52.9-5.3 69.2 17.1z"/>
+    </svg><span class="dock__indicator"></span></div>
+    <div class="dock__separator"></div>
+    <div class="dock__icon" data-href="../perfil/index.html" title="Perfil"><svg width="48" height="48" viewBox="0 0 322 322" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;width:48px;height:48px;display:block;">
+      <path d="M321.347 72.106C321.347 32.31 289.037 0 249.241 0H72.106C32.31 0 0 32.31 0 72.106v177.135c0 39.796 32.31 72.106 72.106 72.106h177.135c39.796 0 72.106-32.31 72.106-72.106V72.106Z" style="fill:#fff"/>
+      <path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+      <clipPath id="a"><path d="M126.106 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.821-8.67-39.057-30.754-39.057-56.6 0-33.006 26.478-59.876 59.333-60.511-18.551 13.563-30.61 35.488-30.61 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.006c-.004.137-.006.275-.006.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath>
+      <g clip-path="url(#a)"><path d="M126.531 277.545V43.603H55.027v233.942h71.504Z" style="fill:url(#b)"/></g>
+      <path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z" style="fill:#ebebeb"/>
+      <clipPath id="c"><path d="M167.618 266.574c.775.965.309 2.517.017 2.43l-7.773 7.741c-1.686 1.206-3.365 1.132-5.009.135l-18.424-19.268c-.452-.649-.762-1.328-.833-2.058v-94.735c-22.82-8.67-39.056-30.754-39.056-56.6 0-33.006 26.477-59.876 59.333-60.511-18.552 13.563-30.611 35.488-30.611 60.208 0 28.109 15.593 52.604 38.593 65.301v87.841h.007c-.005.137-.007.275-.007.413 0 3.551 1.699 6.535 3.763 9.103Z"/></clipPath>
+      <g clip-path="url(#c)"><path d="M168.043 277.545V43.603H96.54v233.942h71.503Z" style="fill:url(#d)"/></g>
+      <path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z" style="fill:none"/>
+      <clipPath id="e"><path d="M177.014 160.725c-22.82-8.67-39.056-30.753-39.056-56.599 0-33.404 27.119-60.523 60.523-60.523 33.403 0 60.523 27.119 60.523 60.523 0 28.22-19.357 51.956-45.506 58.642l26.358 26.862c.994 1.581.943 3.037-.059 4.377l-25.881 26.464 18.777 18.979c1.571 2.132 1.323 4.182-.256 6.171l-31.157 31.03c-1.686 1.207-3.364 1.133-5.008.135l-18.424-19.268c-.453-.648-.763-1.327-.834-2.057v-94.736Zm21.662-93.481c8.924 0 16.169 7.245 16.169 16.169s-7.245 16.169-16.169 16.169-16.169-7.245-16.169-16.169 7.245-16.169 16.169-16.169Z"/></clipPath>
+      <g clip-path="url(#e)"><path d="M259.004 277.545V43.603H137.958v233.942h121.046Z" style="fill:url(#f)"/></g>
+      <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 90.78 43.603)"><stop offset="0" style="stop-color:#ffdd53;stop-opacity:1"/><stop offset="1" style="stop-color:#ffbf01;stop-opacity:1"/></linearGradient><linearGradient id="d" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -71.5033 0 132.291 43.603)"><stop offset="0" style="stop-color:#51e376;stop-opacity:1"/><stop offset="1" style="stop-color:#34c759;stop-opacity:1"/></linearGradient><linearGradient id="f" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0 233.943 -121.046 0 198.481 43.603)"><stop offset="0" style="stop-color:#62ccf8;stop-opacity:1"/><stop offset="1" style="stop-color:#0079ff;stop-opacity:1"/></linearGradient></defs>
+    </svg><span class="dock__indicator"></span></div>
+<div class="dock__icon" data-href="../ajustes/index.html" title="Ajustes"><svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="width:48px;height:48px;display:block;">
+      <g id="Symbols_8_">
+        <g id="Graphics-_x2F_-App-Icons-_x2F_-Settings-">
+          <g id="Settings-Icon">
+            <linearGradient id="Background_13_" x1="-185.017" x2="-185.017" y1="626.266" y2="624.767" gradientTransform="matrix(60 0 0 -60 11151 37581)" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#D3D7DD"></stop>
+              <stop offset="1" stop-color="#888C90"></stop>
+            </linearGradient>
+            <path id="Background_9_" d="M63.6 5c9 0 13.5 0 18.4 1.5 5.3 1.9 9.5 6.1 11.4 11.4C95 22.8 95 27.4 95 36.4v27.2c0 9 0 13.5-1.5 18.4-1.9 5.3-6.1 9.5-11.4 11.4-5 1.6-9.5 1.6-18.5 1.6H36.4c-9 0-13.5 0-18.4-1.5-5.4-2-9.5-6.1-11.5-11.5C5 77.2 5 72.7 5 63.6V36.4c0-9 0-13.5 1.5-18.4 2-5.3 6.1-9.5 11.5-11.4C22.8 5 27.3 5 36.4 5h27.2z" style="fill:url(#Background_13_)"></path>
+            <circle id="Oval_3_" cx="50" cy="50" r="39" style="fill:#2e2e30"></circle>
+            <g id="Shape_1_">
+              <path d="M73.4 51.7H54.3c-1.6 0-3.7 1.1-4.5 2.6l-9.8 17c-1.1 1.8-.2 4 1.9 5 3.1 1.7 11.2 1.6 17.4-.2 4.8-1.7 8.9-4.7 12.1-8.5 4.2-5.3 5.5-10.7 5.5-12.3 0-1.8-1.4-3.6-3.5-3.6z" style="fill:none"></path>
+              <circle cx="50" cy="50" r="1.5" style="fill:none"></circle>
+              <linearGradient id="SVGID_1_" x1="-184.161" x2="-184.161" y1="627.5" y2="626" gradientTransform="matrix(48.1623 0 0 -48.1543 8919.593 30230.77)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#D9DADB"></stop>
+                <stop offset="1" stop-color="#7D8082"></stop>
+              </linearGradient>
+              <path d="M85.1 51.8c1.3-.2 1.3-.5 0-.8l-3.7-.7V50v-1.5l3.6-.9c1.3-.3 1.2-.7-.1-.8l-3.7-.3c-.1-.6-.1-1.1-.2-1.7l3.5-1.3c1.2-.5 1.2-.8-.1-.8l-3.7.1c-.1-.6-.3-1.1-.4-1.7l3.3-1.7c1.2-.6 1-.9-.2-.7l-3.7.6c-.2-.5-.4-1.1-.6-1.6l3.1-2.1c1.1-.8.9-1.1-.3-.7l-3.6 1c-.3-.5-.5-1-.8-1.5l2.8-2.5c1-.9.8-1.2-.4-.7l-3.4 1.4c-.3-.5-.7-1-1-1.4l2.5-2.8c.9-1 .7-1.2-.5-.6L74 29.6c-.4-.4-.7-.9-1.1-1.3l2.2-3.1c.8-1.1.5-1.3-.6-.6l-3 2.2c-.4-.4-.8-.8-1.3-1.1l1.8-3.3c.6-1.2.3-1.4-.6-.5l-2.7 2.5c-.5-.3-.9-.7-1.4-1l1.4-3.5c.5-1.2.2-1.4-.7-.4l-2.4 2.8c-.5-.3-1-.5-1.5-.8l.9-3.6c.3-1.3 0-1.4-.7-.3l-2 3.1c-.5-.2-1.1-.4-1.6-.6l.5-3.7c.2-1.3-.1-1.4-.7-.2l-1.7 3.3c-.5-.2-1.1-.3-1.7-.4l.1-3.7c0-1.3-.3-1.4-.8-.1l-1.3 3.5c-.6-.1-1.1-.2-1.7-.2l-.6-3.6c-.1-1.3-.5-1.3-.8-.1l-.9 3.6h-1.7l-.8-3.7c-.3-1.3-.6-1.3-.8 0l-.4 3.7c-.6 0-1.1.1-1.7.2l-1.3-3.5c-.4-1.2-.8-1.2-.8.1l.1 3.7c-.6.1-1.1.2-1.7.4L40.4 16c-.6-1.2-.9-1.1-.8.2l.4 3.7c-.5.2-1.1.4-1.6.6l-2-3.1c-.7-1.1-1-.1-.7.3l.9 3.6c-.5.2-1 .5-1.5.8l-2.4-2.9c-.8-1-1.2-.8-.7.4l1.3 3.5c-.5.3-1 .6-1.4.9l-2.7-2.6c-1-.9-1.2-.7-.6.5l1.7 3.3c-.4.4-.9.7-1.3 1.1l-3-2.2c-1.1-.8-1.3-.5-.6.5l2.1 3.1c-.4.4-.8.8-1.2 1.3l-3.2-1.9c-1.1-.7-1.4-.4-.5.6l2.4 2.8c-.3.4-.7.9-1 1.4l-3.4-1.5c-1.2-.5-1.4-.2-.4.7l2.8 2.5c-.3.5-.6 1-.8 1.5l-3.6-1c-1.3-.4-1.4 0-.3.7l3 2.1c-.2.5-.5 1-.7 1.6l-3.7-.6c-1.3-.2-1.4.1-.3.7l3.3 1.8c-.2.5-.3 1.1-.5 1.6l-3.7-.1c-1.3 0-1.4.3-.2.8L19 44c-.1.6-.2 1.1-.3 1.7l-3.7.5c-1.3.1-1.3.4-.1.8l3.6 1c0 .6-.1 1.1-.1 1.7l-3.7.7c-1.3.2-1.3.6 0 .8l3.7.5c0 .6.1 1.1.1 1.7l-3.6 1.1c-1.3.4-1.2.7.1.8l3.7.1c.1.6.2 1.1.3 1.7l-3.4 1.6c-1.2.6-1.1.9.2.8l3.7-.4c.2.6.3 1.1.5 1.7l-3.2 1.9c-1.1.7-1 1 .3.7l3.7-.8c.2.5.5 1 .7 1.6l-2.9 2.3c-1 .8-.9 1.1.4.7l3.5-1.2.9 1.5-2.4 2.4c-.9.9-.7 1.2.4.6l3.4-1.6c.3.5.7.9 1.1 1.3l-2.3 2.9c-.8 1-.6 1.3.5.6l3.1-2 1.2 1.2-1.9 3.2c-.7 1.1-.4 1.3.6.5l2.9-2.4c.4.4.9.7 1.4 1.1l-1.6 3.4c-.6 1.2-.3 1.4.6.4l2.6-2.7 1.5.9-1.2 3.5c-.4 1.2-.1 1.4.7.4l2.3-3c.5.2 1 .5 1.6.7l-.7 3.7c-.3 1.3.1 1.4.7.3l1.9-3.2c.5.2 1.1.4 1.6.5L41 84c-.1 1.3.2 1.4.8.2l1.5-3.4c.6.1 1.1.2 1.7.2l.6 3.6c.1 1.3.5 1.3.8.1l.9-3.6h1.7l.8 3.7c.3 1.3.6 1.3.8 0l.4-3.7c.6 0 1.1-.1 1.7-.2l1.3 3.5c.4 1.2.8 1.2.8-.1l-.1-3.7c.6-.1 1.1-.2 1.7-.4l1.3 3.4c.5.1 1 .2 1.5.2l-.1-3.7c0-1.3.3-1.4.8-.1l1.3-3.5c.6.1 1.1.2 1.7.2l.6 3.6c.1 1.3.5 1.3.8.1l.9-3.6c.6 0 1.1-.1 1.7-.2l1.3 3.5c.4 1.2.8 1.2.8-.1v-3.7c.6-.1 1.1-.2 1.7-.4l1.3 3.5c.5.1 1 .2 1.5.2l-.4-3.7c-.2-1.3.1-1.4.7-.3l1.7 3.2c.4.2.9.4 1.4.5l-.4 3.7c.2 1.3-.1 1.4-.7.2l1.7-3.3c.5.2 1.1.3 1.7.4l-.1 3.7c0 1.3-.3 1.4-.8.1l1.3-3.5c.6.1 1.1.2 1.7.2l.6 3.6c.1 1.3.5 1.3.8.1l.9-3.6c.6 0 1.1-.1 1.7-.2l1.3 3.5c.4 1.2.8 1.2.8-.1l-.1-3.7c.6-.1 1.1-.2 1.7-.4l1.3 3.5c.5.1 1 .2 1.5.2l-.1-3.7c0-1.3.3-1.4.8-.1l1.3-3.5c.6.1 1.1.2 1.7.2l.6 3.6c.1 1.3.5 1.3.8.1l.9-3.6h1.7l.8 3.7c.3 1.3.6 1.3.8 0l.4-3.7c.6 0 1.1-.1 1.7-.2l1.3 3.5c.4 1.2.8 1.2.8-.1v-3.7l1.7-.4c.5.1 1 .2 1.5.2l-.4-3.7c.2 1.3-.2 1.4-.8.2l3.4-1.6c.6-.3 1.1-.6 1.7-.8l1.3 3.5c.5.1 1 .2 1.5.2l-.4-3.7c.2 1.3-.1 1.4-.7.2l-1.7-3.3c.5-.2 1-.5 1.5-.7l1.3 3.5c.5.1 1 .2 1.4.2l-.4-3.7c.3 1.3-.1 1.4-.7.3l-1.7-3.2c.5-.2 1-.4 1.5-.6l1.4 3.4c.5.1.9.1 1.4.2l-.3-3.7c.3 1.3-.1 1.4-.7.2l1.3-3.5c.5-.1 1.1-.3 1.6-.4l1.2 3.6c.5.1.9.1 1.4.1l-.3-3.7c.3 1.3-.1 1.4-.7.2l3.4-1.6c.5-.2 1-.5 1.5-.7l1.4 3.4c.5.1.9.1 1.4.2l-.2-3.7c.3 1.2-.2 1.4-.7.3l-1.4-3.4c.5-.1 1-.4 1.5-.5l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.3 1.3-.1 1.4-.7.2l1.3-3.5c.6-.1 1.1-.3 1.6-.4l1.3 3.5c.5.1.9.1 1.4.1l-.2-3.7c.3 1.3-.1 1.4-.7.2l1.3-3.5c.6-.1 1.1-.3 1.7-.4l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.3 1.2-.1 1.4-.6.3l-1.3-3.4c.5-.1 1-.3 1.5-.5l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.3 1.3-.1 1.4-.7.2l1.3-3.5c.6-.1 1.1-.3 1.6-.4l1.3 3.5c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3 0 1.5-.5.4l-1.4-3.4c.5 0 1-.2 1.4-.3l1.3 3.5c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3 0 1.5-.5.4l-1.3-3.5c.5 0 1-.2 1.5-.3l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3 0 1.5-.5.4l-1.3-3.4c.5 0 1-.2 1.5-.3l1.3 3.5c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3-.1 1.5-.6.4l-1.3-3.4c.5 0 1-.2 1.5-.3l1.2 3.6c.5.1.9.1 1.4.1l-.3-3.7c.4 1.2-.1 1.4-.6.3l-1.3-3.4c.5-.1 1-.3 1.5-.5l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3-.1 1.5-.6.4l-1.3-3.4c.5 0 1-.2 1.5-.3l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3-.1 1.5-.6.4l-1.3-3.4c.5 0 1-.2 1.5-.3l1.2 3.6c.5.1.9.1 1.4.1l-.3-3.7c.4 1.2-.1 1.4-.6.3l-1.4-3.4c.5-.1 1-.3 1.5-.5l1.2 3.6c.5.1.9.1 1.4.1l-.2-3.7c.4 1.3-.1 1.5-.6.4l-1.3-3.4c.5 0 1-.2 1.5-.3l1.2 3.6c.5.1.9.1 1.4.1z" style="fill:url(#SVGID_1_)"></path>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg><span class="dock__indicator"></span></div>
+  </nav>
+  
+  <script>
+    // ============================================
+    // DATOS DE CURSOS, TALLERES Y CERTIFICACIONES
+    // ============================================
+    const cursos = [
+      {id:1, nombre:'Inteligencia Emocional', emoji:'🧠', duracion:'2h', categoria:'Psicología', status:'progress', progress:60, lessons:3, total:5},
+      {id:2, nombre:'Manejo de Conflictos', emoji:'🤝', duracion:'3h', categoria:'Pedagogía', status:'progress', progress:50, lessons:2, total:4},
+      {id:3, nombre:'Comunicación Asertiva', emoji:'🗣️', duracion:'2h', categoria:'Comunicación', status:'completed', lessons:4, total:4, date:'15/03/2026'},
+      {id:4, nombre:'Resiliencia', emoji:'💪', duracion:'2h', categoria:'Bienestar', status:'available'},
+      {id:5, nombre:'Prevención de Acoso', emoji:'🛡️', duracion:'3h', categoria:'Prevención', status:'available'},
+      {id:6, nombre:'Educación Sexual', emoji:'📚', duracion:'4h', categoria:'Psicología', status:'available'},
+      {id:7, nombre:'Primeros Auxilios Psicológicos', emoji:'🏥', duracion:'4h', categoria:'Psicología', status:'available'},
+      {id:8, nombre:'Mindfulness', emoji:'🧘', duracion:'1.5h', categoria:'Bienestar', status:'available'},
+    ];
+
+    const talleres = [
+      {id:1, nombre:'Taller de Inteligencia Emocional', fecha:'15/05/2026', duracion:'3h', psi:'Dra. García', cupo:20, inscrito:false},
+      {id:2, nombre:'Prevención del Suicidio', fecha:'20/05/2026', duracion:'4h', psi:'Dr. Pérez', cupo:15, inscrito:false},
+    ];
+
+    const certificaciones = [
+      {id:1, nombre:'Comunicación Asertiva', fecha:'15/03/2026', emoji:'🎓'},
+      {id:2, nombre:'Primeros Auxilios Psicológicos', fecha:'01/02/2026', emoji:'🏥'},
+    ];
+
+    // Estado de cursos del usuario
+    const userCourses = {
+      'Inteligencia Emocional': {status: 'progress', progress: 60, lessons: 3, total: 5},
+      'Manejo de Conflictos': {status: 'progress', progress: 50, lessons: 2, total: 4},
+      'Comunicación Asertiva': {status: 'completed', lessons: 4, total: 4, date: '15/03/2026'},
+    };
+
+    // ============================================
+    // ESTADÍSTICAS DINÁMICAS
+    // ============================================
+    function getStats() {
+      const completed = Object.values(userCourses).filter(c => c.status === 'completed').length;
+      const inProgress = Object.values(userCourses).filter(c => c.status === 'progress').length;
+      const totalHours = cursos.filter(c => userCourses[c.nombre]).reduce((acc, c) => {
+        const hours = parseFloat(c.duracion);
+        return acc + hours;
+      }, 0);
+      const certCount = certificaciones.length;
+      const streak = 7; // Simulado
+      
+      return { completed, inProgress, totalHours, certCount, streak };
+    }
+
+    // ============================================
+    // RENDERIZADO POR TAB
+    // ============================================
+    function renderHoy() {
+      const stats = getStats();
+      return `
+        <div class="featured">
+          <div class="featured-label">DESTACADO</div>
+          <div class="featured-title">Inteligencia Emocional en el Aula</div>
+          <div class="featured-desc">Aprende a identificar y gestionar emociones en estudiantes para crear un ambiente de aprendizaje positivo</div>
+          <button class="featured-btn" onclick="alert('Abriendo curso...')">Ver Curso</button>
+        </div>
+        
+        <div class="stats">
+          <div class="stat"><div class="stat-value">${stats.completed + stats.inProgress}</div><div class="stat-label">Cursos</div></div>
+          <div class="stat"><div class="stat-value">${stats.totalHours}h</div><div class="stat-label">Aprend.</div></div>
+          <div class="stat"><div class="stat-value">${stats.certCount}</div><div class="stat-label">Certif.</div></div>
+          <div class="stat"><div class="stat-value">${stats.streak}</div><div class="stat-label">Racha</div></div>
+        </div>
+        
+        <div class="section-title">Cursos Recomendados para Ti</div>
+        <div class="grid">
+          ${cursos.filter(c => c.status === 'available').slice(0, 3).map(curso => `
+            <div class="card" onclick="openCurso('${curso.nombre}')">
+              <div class="card-img" style="background:linear-gradient(135deg,#007AFF,#5856D6)">${curso.emoji}</div>
+              <div class="card-body">
+                <div class="card-title">${curso.nombre}</div>
+                <div class="card-meta">${curso.duracion}</div>
+                <span class="card-badge">${curso.categoria}</span>
+              </div>
+              <button class="card-btn card-btn--get" onclick="event.stopPropagation(); obtenerCurso(${curso.id}, '${curso.nombre}')">Obtener</button>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="section-title" style="margin-top:20px">Continuar Aprendiendo</div>
+        <div class="grid">
+          ${cursos.filter(c => c.status === 'progress').map(curso => `
+            <div class="card" onclick="openCurso('${curso.nombre}')">
+              <div class="card-img" style="background:linear-gradient(135deg,#34C759,#30D158)">${curso.emoji}</div>
+              <div class="card-body">
+                <div class="card-title">${curso.nombre}</div>
+                <div class="card-meta">${curso.lessons}/${curso.total} módulos • ${curso.progress}%</div>
+                <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${curso.progress}%"></div></div>
+              </div>
+              <button class="card-btn card-btn--open" onclick="event.stopPropagation(); openCurso('${curso.nombre}')">Continuar</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderCursos() {
+      const categories = ['Psicología', 'Pedagogía', 'Liderazgo', 'Bienestar', 'Prevención'];
+      return `
+        ${categories.map(cat => {
+          const cursosEnCat = cursos.filter(c => c.categoria === cat);
+          if (cursosEnCat.length === 0) return '';
+          return `
+            <div class="section-title" style="margin-top:${cat === categories[0] ? '0' : '20px'}">${cat}</div>
+            <div class="grid">
+              ${cursosEnCat.map(curso => `
+                <div class="card" onclick="openCurso('${curso.nombre}')">
+                  <div class="card-img" style="background:${getGradient(curso.categoria)}">${curso.emoji}</div>
+                  <div class="card-body">
+                    <div class="card-title">${curso.nombre}</div>
+                    <div class="card-meta">${curso.duracion}</div>
+                    <span class="card-badge">${curso.categoria}</span>
+                    ${curso.status === 'progress' ? `<div class="progress-bar-container"><div class="progress-bar-fill" style="width:${curso.progress}%"></div></div>` : ''}
+                  </div>
+                  ${getCursoButton(curso)}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function renderTalleres() {
+      return `
+        <div class="section-title">Talleres Disponibles</div>
+        ${talleres.map(t => `
+          <div class="workshop-item">
+            <div class="workshop-title">${t.nombre}</div>
+            <div class="workshop-detail">
+              <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+              ${t.fecha} • ${t.duracion}
+            </div>
+            <div class="workshop-detail">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              ${t.psi}
+            </div>
+            <div class="workshop-detail">
+              <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+              Cupo: ${t.cupo} disponibles
+            </div>
+            <button class="workshop-btn" onclick="inscribirseTaller(${t.id})" ${t.inscrito ? 'disabled' : ''}>
+              ${t.inscrito ? 'Inscrito' : 'Inscribirse'}
+            </button>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderCertificaciones() {
+      return `
+        <div class="section-title">Mis Certificaciones</div>
+        ${certificaciones.map(cert => `
+          <div class="cert-item">
+            <div class="cert-icon">${cert.emoji}</div>
+            <div class="cert-body">
+              <div class="cert-title">${cert.nombre}</div>
+              <div class="cert-date">Obtenido: ${cert.fecha}</div>
+            </div>
+            <button class="cert-btn" onclick="descargarCertificado('${cert.nombre}')">Descargar PDF</button>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderMisCursos() {
+      const enProgreso = cursos.filter(c => c.status === 'progress');
+      const completados = cursos.filter(c => c.status === 'completed');
+      
+      return `
+        <div class="section-title">En Progreso</div>
+        ${enProgreso.length > 0 ? enProgreso.map(curso => `
+          <div class="my-course-item">
+            <div class="my-course-header">
+              <div class="my-course-emoji">${curso.emoji}</div>
+              <div class="my-course-info">
+                <div class="my-course-title">${curso.nombre}</div>
+                <div class="my-course-meta">${curso.lessons}/${curso.total} módulos • ${curso.progress}%</div>
+              </div>
+              <button class="my-course-btn" onclick="openCurso('${curso.nombre}')">Continuar</button>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${curso.progress}%"></div></div>
+          </div>
+        `).join('') : '<p style="color:#8E8E93;font-size:14px;">No tienes cursos en progreso.</p>'}
+        
+        <div class="section-title" style="margin-top:20px">Completados</div>
+        ${completados.length > 0 ? completados.map(curso => `
+          <div class="my-course-item">
+            <div class="my-course-header">
+              <div class="my-course-emoji" style="background:linear-gradient(135deg,#34C759,#30D158)">${curso.emoji}</div>
+              <div class="my-course-info">
+                <div class="my-course-title">${curso.nombre}</div>
+                <div class="my-course-meta">Completado • ${curso.date || ''}</div>
+              </div>
+              <button class="my-course-btn" onclick="openCurso('${curso.nombre}')">Repasar</button>
+            </div>
+          </div>
+        `).join('') : '<p style="color:#8E8E93;font-size:14px;">No tienes cursos completados.</p>'}
+      `;
+    }
+
+    // ============================================
+    // HELPERS
+    // ============================================
+    function getGradient(categoria) {
+      const gradients = {
+        'Psicología': 'linear-gradient(135deg,#5856D6,#AF52DE)',
+        'Pedagogía': 'linear-gradient(135deg,#007AFF,#5856D6)',
+        'Liderazgo': 'linear-gradient(135deg,#FF9500,#FF9F0A)',
+        'Bienestar': 'linear-gradient(135deg,#34C759,#30D158)',
+        'Prevención': 'linear-gradient(135deg,#FF3B30,#FF453A)',
+        'Comunicación': 'linear-gradient(135deg,#5AC8FA,#64D2FF)',
+      };
+      return gradients[categoria] || 'linear-gradient(135deg,#007AFF,#5856D6)';
+    }
+
+    function getCursoButton(curso) {
+      if (curso.status === 'completed') {
+        return `<button class="card-btn card-btn--open" onclick="event.stopPropagation(); openCurso('${curso.nombre}')">Repasar</button>`;
+      } else if (curso.status === 'progress') {
+        return `<button class="card-btn card-btn--progress" onclick="event.stopPropagation(); openCurso('${curso.nombre}')">Abrir</button>`;
+      } else {
+        return `<button class="card-btn card-btn--get" onclick="event.stopPropagation(); obtenerCurso(${curso.id}, '${curso.nombre}')">Obtener</button>`;
+      }
+    }
+
+    // ============================================
+    // ACCIONES
+    // ============================================
+    function obtenerCurso(id, nombre) {
+      // Simular descarga
+      const curso = cursos.find(c => c.id === id);
+      if (!curso) return;
+      
+      // Cambiar estado a progreso
+      curso.status = 'progress';
+      curso.progress = 0;
+      curso.lessons = 0;
+      
+      // Agregar a userCourses
+      userCourses[nombre] = {status: 'progress', progress: 0, lessons: 0, total: curso.total};
+      
+      // Animar progreso
+      const interval = setInterval(() => {
+        curso.progress += 10;
+        if (curso.progress >= 100) {
+          curso.progress = 100;
+          curso.status = 'completed';
+          curso.lessons = curso.total;
+          userCourses[nombre].status = 'completed';
+          userCourses[nombre].progress = 100;
+          userCourses[nombre].lessons = curso.total;
+          clearInterval(interval);
+        }
+        // Re-render current tab
+        const activeTab = document.querySelector('.tab--active');
+        if (activeTab) switchTab(activeTab.dataset.tab);
+      }, 200);
+      
+      alert(`Descargando "${nombre}"...`);
+    }
+
+    function openCurso(nombre) {
+      alert(`Abriendo curso: ${nombre}`);
+    }
+
+    function inscribirseTaller(id) {
+      const taller = talleres.find(t => t.id === id);
+      if (!taller) return;
+      
+      taller.inscrito = true;
+      alert(`Te has inscrito en: ${taller.nombre}`);
+      
+      // Re-render current tab
+      const activeTab = document.querySelector('.tab--active');
+      if (activeTab) switchTab(activeTab.dataset.tab);
+    }
+
+    function descargarCertificado(nombre) {
+      alert(`Descargando certificado: ${nombre}\n(En una implementación real, esto generaría un PDF)`);
+    }
+
+    // ============================================
+    // TAB SWITCHING
+    // ============================================
+    function switchTab(tabName) {
+      const content = document.getElementById('content');
+      switch(tabName) {
+        case 'hoy':
+          content.innerHTML = renderHoy();
+          break;
+        case 'cursos':
+          content.innerHTML = renderCursos();
+          break;
+        case 'talleres':
+          content.innerHTML = renderTalleres();
+          break;
+        case 'certificaciones':
+          content.innerHTML = renderCertificaciones();
+          break;
+        case 'mis-cursos':
+          content.innerHTML = renderMisCursos();
+          break;
+      }
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    function logout() {
+      syncStore.clear();
+      window.location.href = '../login.html';
+    }
+
+    function navigateTo(p) {
+      window.location.href = p;
+    }
+
+    // Actualizar fecha del icono de agenda
+    function updateCalendarIcon() {
+      const now = new Date();
+      const dayNameOptions = { weekday: 'short' };
+      let dayName = now.toLocaleDateString('es-ES', dayNameOptions).toUpperCase();
+      dayName = dayName.replace('.', ''); 
+      const dayNumber = now.getDate();
+      
+      const dayNameEl = document.getElementById('day-name');
+      const dayNumberEl = document.getElementById('day-number');
+      if (dayNameEl) dayNameEl.textContent = dayName;
+      if (dayNumberEl) dayNumberEl.textContent = dayNumber;
+    }
+    
+    // Ejecutar al cargar
+    updateCalendarIcon();
+
+document.addEventListener('DOMContentLoaded', () => {
+      // Check auth
+      if (syncStore.get('logged') !== 'true') {
+window.location.href = '../login.html';
+        return;
+      }
+
+      // Set user avatar
+      const usuario = syncStore.get('usuario') || 'U';
+      document.getElementById('user-avatar').textContent = usuario.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+      // Logout button
+      document.getElementById('logout-btn').addEventListener('click', logout);
+
+      // Dock navigation
+      document.querySelectorAll('.dock__icon').forEach(i => {
+        i.addEventListener('click', () => navigateTo(i.dataset.href));
+      });
+
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('tab--active'));
+          this.classList.add('tab--active');
+          switchTab(this.dataset.tab);
+        });
+      });
+
+      // Clock
+      setInterval(() => {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
+      }, 1000);
+
+      // Initial render
+      switchTab('hoy');
+    });
+  </script>
+</body>
+</html>

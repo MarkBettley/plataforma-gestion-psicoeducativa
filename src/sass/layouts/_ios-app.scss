@@ -1,0 +1,11 @@
+// ===========================================
+// iOS App Layout
+// ===========================================
+@import 'abstracts/variables';
+
+.ios-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $bg-secondary;
+}
