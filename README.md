@@ -36,7 +36,7 @@ bash start.sh
 
 Abrir en el navegador:
 
-http://localhost:8080
+http://localhost:8080/src/html/login.html
 
 ### Backend
 
